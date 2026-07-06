@@ -1,6 +1,6 @@
 # rune
 
-Build tool for organizing codebase
+Build & run tool for organizing codebase
 
 [Zig 0.16.0 Realase Notes](https://ziglang.org/download/0.16.0/release-notes.html)
 
