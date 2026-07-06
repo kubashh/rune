@@ -1,18 +1,15 @@
 const std = @import("std");
 
 pub const allocator = std.heap.page_allocator;
-pub const print = std.debug.print;
 
-const Opt = enum { Safe, Release, Tiny };
-pub const Extention = enum { C, Zig, Rust, Js, Jsx, Ts, Tsx, Html, Css, Unknown };
-
-const Entry = struct {
-    path: []const u8,
-    extention: Extention,
-};
+pub const Extention = enum { C, Cpp, Cs, Java, Zig, Rust, Py, Html, Css, Js, Jsx, Ts, Tsx, Json, Unknown };
+const Optimization = enum { Debug, Safe, Release, Size };
 
 pub const Config = struct {
-    input: ?Entry,
-    output: ?Entry,
-    opt: Opt,
+    inputPath: []const u8,
+    outputPath: []const u8,
+    extention: Extention,
+    opt: Optimization,
+    zigLibDir: []const u8,
+    run: bool,
 };

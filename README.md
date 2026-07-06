@@ -2,14 +2,28 @@
 
 Build tool for organizing codebase
 
+[Zig 0.16.0 Realase Notes](https://ziglang.org/download/0.16.0/release-notes.html)
+
 ## Cli design
 
 ### 1. Cli args
 
-1st arg input
+```txt
+Usage: rune [input_path] [output_path | flag] [flags]
+Flags:
+  --debug | --safe | --release | --size           Set optimization level (default: --debug)
+  --linux | --windows | --macos | --freebsd       Set target OS (default: current OS)
 
-```sh
-rune input.ext output.ext --dev
+  -h, --help                                      Show this help message
+
+Example usage:
+  rune src/main.c dist/main --release
+  rune src/server.ts
+  rune src/main.ts dist/main.js --size
+  rune src/index.html dist/index.html --size
+
+Supported extentions:
+  .c
 ```
 
 ### 2. rune.json
