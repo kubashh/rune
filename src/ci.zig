@@ -66,7 +66,7 @@ pub fn processArgs(init: std.process.Init) Config {
             },
             else => .browser,
         },
-        .zigLibDir = "/opt/zig-0.16.0/lib",
+        // .zigLibDir = "/opt/zig-0.16.0/lib",
         .run = true,
     };
 

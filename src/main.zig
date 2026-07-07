@@ -57,9 +57,8 @@ fn createCommandAlloc(config: *Config) ![]const u8 {
         },
         .c => return try std.fmt.allocPrint(
             allocator,
-            "ZIG_LIB_DIR={s} && zig cc {s} -o {s} -Doptimize={s} -target {s}",
+            "zig cc {s} -o {s} -Doptimize={s} -target {s}",
             .{
-                config.zigLibDir,
                 config.inputPath,
                 config.outputPath,
                 getOptimizeZig(config.opt),

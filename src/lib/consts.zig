@@ -101,6 +101,6 @@ pub const Config = struct {
     extention: Extention,
     target: Target,
     opt: Optimization,
-    zigLibDir: []const u8,
+    // zigLibDir: []const u8,
     run: bool,
 };
