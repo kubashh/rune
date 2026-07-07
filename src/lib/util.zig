@@ -8,36 +8,23 @@ const SpwanSyncError = std.process.SpawnError || std.process.Child.WaitError;
 pub const print = std.debug.print;
 
 pub fn printErrExit(comptime fmt: []const u8, options: anytype) noreturn {
-    std.debug.print(Color.red ++ "error:" ++ Color.reset ++ " " ++ fmt, options);
+    std.debug.print(Color.red ++ "error:" ++ Color.reset ++ " " ++ fmt ++ "run 'rune --help' for usage\n", options);
     std.process.exit(1);
 }
 
 pub fn spawnSync(io: std.Io, options: std.process.SpawnOptions) SpwanSyncError!std.process.Child.Term {
     var child = try std.process.spawn(io, options);
-
     return try child.wait(io);
 }
 
 // TODO use zig 0.16.0 file api's because of performance. Function for now works
-pub fn fileExists(io: std.Io, path: []const u8) bool {
-    const term = spawnSync(io, .{
-        .argv = &[_][]const u8{ "[", "-e", path, "]" },
-        .stdin = .ignore,
-        .stdout = .ignore,
-        .stderr = .ignore,
-    }) catch {
-        return false;
+pub fn fileExistsCwd(io: std.Io, path: []const u8) bool {
+    const cwd = std.Io.Dir.cwd();
+    _ = cwd.statFile(io, path, .{}) catch |err| switch (err) {
+        error.FileNotFound => return false,
+        else => return true, // exists but e.g. permission; treat as "exists"
     };
-
-    switch (term) {
-        .exited => |code| {
-            if (code == 0) return true;
-            return false;
-        },
-        else => {
-            return false;
-        },
-    }
+    return true;
 }
 
 pub inline fn measureStart(io: std.Io) i96 {

@@ -9,8 +9,13 @@ const Extention = consts.Extention;
 const print = util.print;
 const printErrExit = util.printErrExit;
 
-pub fn processArgs(argv: std.process.Args) Config {
-    var args = std.process.Args.Iterator.init(argv);
+pub fn processArgs(init: std.process.Init) Config {
+    var buf: [1024]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
+    const alloc = fba.allocator();
+    var args = init.minimal.args.iterateAllocator(alloc) catch |err| {
+        printErrExit("when allocating cli args {}\n", .{err});
+    };
     defer args.deinit();
 
     // Skip exe path
@@ -38,12 +43,18 @@ pub fn processArgs(argv: std.process.Args) Config {
         .opt = .debug,
         .target = switch (builtin.target.os.tag) {
             .linux => switch (builtin.target.cpu.arch) {
-                .x86 => .@"linux-x86",
-                else => switch (builtin.target.abi) {
+                .x86_64 => switch (builtin.target.abi) {
                     .gnu => .@"linux-x86_64",
                     .musl => .@"linux-x86_64-musl",
                     else => .browser,
                 },
+                .x86 => .@"linux-x86",
+                else => .browser,
+            },
+            .macos => switch (builtin.target.cpu.arch) {
+                .aarch64 => .@"macos-aarch64",
+                .x86_64 => .@"macos-x86_64",
+                else => .browser,
             },
             .windows => switch (builtin.target.cpu.arch) {
                 .x86_64 => switch (builtin.target.abi) {
@@ -52,11 +63,6 @@ pub fn processArgs(argv: std.process.Args) Config {
                     else => .browser,
                 },
                 else => .browser,
-            },
-            .macos => switch (builtin.target.cpu.arch) {
-                .x86_64 => .@"macos-x86_64",
-                .aarch64 => .@"macos-aarch64",
-                else => .barowser,
             },
             else => .browser,
         },
@@ -87,6 +93,8 @@ fn handleArg(config: *Config, arg: []const u8) void {
 
     // Handle run flag
     if (std.mem.eql(u8, arg, "--run")) {
+        if (config.run)
+            printErrExit("--run has no effect when no output path is provided\n", .{});
         config.run = true;
         return;
     }
@@ -98,8 +106,7 @@ fn handleArg(config: *Config, arg: []const u8) void {
     }
 
     // Unhandled arg
-    printUsage();
-    printErrExit("unhandled arg: {s}\n\n", .{arg});
+    printErrExit("unknown flag: {s}\n\n", .{arg});
 }
 
 fn handleOptimalization(config: *Config, arg: []const u8) bool {
@@ -140,15 +147,7 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
         } else if (std.mem.eql(u8, value, "browser")) {
             config.target = .browser;
         } else {
-            printErrExit(
-                \\bad --target flag! Try: --target=[target]
-                \\supported targets:
-                \\  linux-x86_64, linux-x86_64-musl, linux-x86          Linux
-                \\  macos-x86_64, macos-aarch64                         Darwin
-                \\  windows-x86_64, windows-x86_64-gnu                  Windows
-                \\  browser                                             Wasm | HTML | JS | TS
-                \\
-            , .{});
+            printErrExit("bad --target flag! Try: --target=[target]\n", .{});
         }
     } else {
         printErrExit("bad --target flag! Try: --target=[target]\n", .{});

@@ -12,12 +12,12 @@ const print = util.print;
 const printErrExit = util.printErrExit;
 const strcmp = util.strcmp;
 const spawnSync = util.spawnSync;
-const fileExists = util.fileExists;
+const fileExistsCwd = util.fileExistsCwd;
 const measureStart = util.measureStart;
 const measurePrint = util.measurePrint;
 
 pub fn main(init: std.process.Init) !void {
-    var config: Config = ci.processArgs(init.minimal.args);
+    var config: Config = ci.processArgs(init);
 
     try run(init.io, &config);
 }
@@ -113,7 +113,7 @@ fn printConfig(config: *Config, command: []const u8) void {
 }
 
 fn processInputExistense(io: std.Io, inputPath: []const u8) void {
-    if (!fileExists(io, inputPath)) {
+    if (!fileExistsCwd(io, inputPath)) {
         printErrExit("file '{s}' not exists!\n", .{inputPath});
     }
 }
