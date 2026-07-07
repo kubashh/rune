@@ -1,6 +1,16 @@
 const std = @import("std");
+const consts = @import("./consts.zig");
+
+const Color = consts.Color;
 
 const SpwanSyncError = std.process.SpawnError || std.process.Child.WaitError;
+
+pub const print = std.debug.print;
+
+pub fn printErrExit(comptime fmt: []const u8, options: anytype) noreturn {
+    std.debug.print(Color.red ++ "error:" ++ Color.reset ++ " " ++ fmt, options);
+    std.process.exit(1);
+}
 
 pub fn spawnSync(io: std.Io, options: std.process.SpawnOptions) SpwanSyncError!std.process.Child.Term {
     var child = try std.process.spawn(io, options);

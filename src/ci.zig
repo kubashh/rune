@@ -3,10 +3,11 @@ const builtin = @import("builtin");
 const consts = @import("./lib/consts.zig");
 const util = @import("./lib/util.zig");
 
-const print = std.debug.print;
-
 const Config = consts.Config;
 const Extention = consts.Extention;
+
+const print = util.print;
+const printErrExit = util.printErrExit;
 
 pub fn processArgs(argv: std.process.Args) Config {
     var args = std.process.Args.Iterator.init(argv);
@@ -20,16 +21,14 @@ pub fn processArgs(argv: std.process.Args) Config {
 
     if (args.next()) |firstArg| {
         if (firstArg[0] == '-') {
-            print("First argument is input path, never flag!\nArg passed: {s}\n", .{firstArg});
-            std.process.exit(0);
+            printErrExit("first argument is input path, never flag!\nArg passed: {s}\n", .{firstArg});
         }
         inputPath = firstArg;
         extention = getExtention(firstArg);
     } else {
         // TODO handle rune.json
-        print("No entry specified!\n\n", .{});
         printUsage();
-        std.process.exit(0);
+        printErrExit("no entry specified!\nRun 'rune entry.exe'\n", .{});
     }
 
     var config: Config = .{
@@ -37,24 +36,29 @@ pub fn processArgs(argv: std.process.Args) Config {
         .outputPath = ".cache/rune/tmp",
         .extention = extention,
         .opt = .debug,
-        .os = switch (builtin.target.os.tag) {
-            .linux => .linux,
-            .windows => .windows,
-            .macos => .macos,
-            else => .linux,
-        },
-        .arch = switch (builtin.target.cpu.arch) {
-            .x86_64 => .x86_64,
-            .x86 => .x86,
-            // .aarch64 => .aarch64,
-            // .arm => .arm,
-            else => .x86_64,
-        },
-        .abi = switch (builtin.target.abi) {
-            .gnu => .gnu,
-            .musl => .musl,
-            .msvc => .msvc,
-            else => .none,
+        .target = switch (builtin.target.os.tag) {
+            .linux => switch (builtin.target.cpu.arch) {
+                .x86 => .@"linux-x86",
+                else => switch (builtin.target.abi) {
+                    .gnu => .@"linux-x86_64",
+                    .musl => .@"linux-x86_64-musl",
+                    else => .browser,
+                },
+            },
+            .windows => switch (builtin.target.cpu.arch) {
+                .x86_64 => switch (builtin.target.abi) {
+                    .msvc => .@"windows-x86_64",
+                    .gnu => .@"window-x86_64-musl",
+                    else => .browser,
+                },
+                else => .browser,
+            },
+            .macos => switch (builtin.target.cpu.arch) {
+                .x86_64 => .@"macos-x86_64",
+                .aarch64 => .@"macos-aarch64",
+                else => .barowser,
+            },
+            else => .browser,
         },
         .zigLibDir = "/opt/zig-0.16.0/lib",
         .run = true,
@@ -66,6 +70,7 @@ pub fn processArgs(argv: std.process.Args) Config {
         } else {
             config.outputPath = outputPathOrFlag;
             config.run = false;
+            config.opt = .release;
         }
     }
 
@@ -80,6 +85,12 @@ fn handleArg(config: *Config, arg: []const u8) void {
     if (handleOptimalization(config, arg)) return;
     if (handleTarget(config, arg)) return;
 
+    // Handle run flag
+    if (std.mem.eql(u8, arg, "--run")) {
+        config.run = true;
+        return;
+    }
+
     // Handle help
     if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
         printUsage();
@@ -87,9 +98,8 @@ fn handleArg(config: *Config, arg: []const u8) void {
     }
 
     // Unhandled arg
-    print("Unhandled arg: {s}\n\n", .{arg});
     printUsage();
-    std.process.exit(1);
+    printErrExit("unhandled arg: {s}\n\n", .{arg});
 }
 
 fn handleOptimalization(config: *Config, arg: []const u8) bool {
@@ -112,61 +122,39 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
 
     if (std.mem.indexOfScalar(u8, arg, '=')) |pos| {
         const value = arg[pos + 1 ..];
-        var archString: []const u8 = undefined;
-        var abiString: []const u8 = undefined;
-        if (std.mem.indexOfScalar(u8, value, '-')) |pos2| {
-            const osString = value[0..pos2];
-            config.os = handleOs(osString);
 
-            archString = value[pos2 + 1 ..];
-            if (std.mem.indexOfScalar(u8, archString, '-')) |pos3| {
-                abiString = archString[pos3 + 1 ..];
-                archString = archString[0..pos3];
-                config.abi = handleAbi(archString);
-            } else {
-                config.abi = switch (config.os) {
-                    .linux => .gnu,
-                    .macos => .none,
-                    .windows => .msvc,
-                };
-            }
-
-            config.arch = handleArch(archString);
+        if (std.mem.eql(u8, value, "linux-x86_64")) {
+            config.target = .@"linux-x86_64";
+        } else if (std.mem.eql(u8, value, "linux-x86_64-musl")) {
+            config.target = .@"linux-x86_64-musl";
+        } else if (std.mem.eql(u8, value, "linux-x86")) {
+            config.target = .@"linux-x86";
+        } else if (std.mem.eql(u8, value, "macos-x86_64")) {
+            config.target = .@"macos-x86_64";
+        } else if (std.mem.eql(u8, value, "macos-aarch64")) {
+            config.target = .@"macos-aarch64";
+        } else if (std.mem.eql(u8, value, "windows-x86_64")) {
+            config.target = .@"windows-x86_64";
+        } else if (std.mem.eql(u8, value, "windows-x86_64-gnu")) {
+            config.target = .@"windows-x86_64-gnu";
+        } else if (std.mem.eql(u8, value, "browser")) {
+            config.target = .browser;
         } else {
-            print("You need specify arch in --target!\n", .{});
-            std.process.exit(1);
+            printErrExit(
+                \\bad --target flag! Try: --target=[target]
+                \\supported targets:
+                \\  linux-x86_64, linux-x86_64-musl, linux-x86          Linux
+                \\  macos-x86_64, macos-aarch64                         Darwin
+                \\  windows-x86_64, windows-x86_64-gnu                  Windows
+                \\  browser                                             Wasm | HTML | JS | TS
+                \\
+            , .{});
         }
     } else {
-        print("Bad --target flag!\nTry: --target=[system]-[arch]", .{});
-        std.process.exit(1);
+        printErrExit("bad --target flag! Try: --target=[target]\n", .{});
     }
 
     return true;
-}
-
-fn handleOs(osString: []const u8) consts.OsTags {
-    if (std.mem.eql(u8, osString, "linux")) return .linux;
-    if (std.mem.eql(u8, osString, "macos")) return .macos;
-    if (std.mem.eql(u8, osString, "windows")) return .windows;
-    print(
-        \\unsupported os!
-        \\try use --target-[os]-[arch]-[abi?]
-        \\supported os's: linux, windows, macos
-        \\
-    , .{});
-    std.process.exit(1);
-}
-
-fn handleArch(archString: []const u8) consts.Arch {
-    if (std.mem.eql(u8, archString, "x86_64")) return .x86_64;
-    if (std.mem.eql(u8, archString, "x86")) return .x86;
-    print(
-        \\unsupported arch!
-        \\try use --target-[os]-[arch]-[abi?]
-        \\supported arch's: x86_64, x86
-        \\
-    , .{});
-    std.process.exit(1);
 }
 
 fn handleAbi(abiString: []const u8) consts.Abi {
@@ -178,20 +166,27 @@ fn handleAbi(abiString: []const u8) consts.Abi {
 
 fn printUsage() void {
     print(
-        \\Usage: rune [input_path] [output_path | flag] [flags]
-        \\Flags:
+        \\usage: rune [input_path] [output_path | flag] [flags]
+        \\flags:
         \\  --debug | --safe | --release | --size           Set optimization level (default: --debug)
-        \\  --linux | --windows | --macos | --freebsd       Set target OS (default: current OS)
+        \\  --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
+        \\  supported targets:
+        \\    linux-x86_64, linux-x86_64-musl, linux-x86        Linux
+        \\    macos-x86_64, macos-aarch64                       Darwin
+        \\    windows-x86_64, windows-x86_64-gnu                Windows
+        \\    browser                                           Wasm | HTML | JS | TS
         \\
+        \\  --run                                           Run compiled program. Use only when output_path is provided
         \\  -h, --help                                      Show this help message
         \\
-        \\Example usage:
+        \\example usage:
+        \\  rune src/main.c
         \\  rune src/main.c dist/main --release
-        \\  rune src/server.ts
-        \\  rune src/main.ts dist/main.js --size
-        \\  rune src/index.html dist/index.html --size
+        // \\  rune src/server.ts
+        // \\  rune src/main.ts dist/main.js --size
+        // \\  rune src/index.html dist/index.html --size
         \\
-        \\Supported extentions:
+        \\supported extentions:
         \\  .c
         \\
     , .{});

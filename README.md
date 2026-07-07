@@ -12,15 +12,16 @@ Build & run tool for organizing codebase
 Usage: rune [input_path] [output_path | flag] [flags]
 Flags:
   --debug | --safe | --release | --size           Set optimization level (default: --debug)
-  --linux | --windows | --macos | --freebsd       Set target OS (default: current OS)
+  --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
+    os: linux | windows | macos | freebsd
+    arch: x86_64 | x86
+    abi?: gnu | musl | msvc
 
   -h, --help                                      Show this help message
 
 Example usage:
+  rune src/main.c
   rune src/main.c dist/main --release
-  rune src/server.ts
-  rune src/main.ts dist/main.js --size
-  rune src/index.html dist/index.html --size
 
 Supported extentions:
   .c
@@ -48,7 +49,7 @@ Supported extentions:
   },
   "scripts:": {
     "default": "rune src/main.zig",
-    "build-linux": "rune src/main.zig --linux --x64 --arm64 --x86",
+    "build-linux": "rune src/main.zig --target=linux-x64 --release",
     "build-macos": "rune src/main.zig --macos --arm64 --x64",
     "build-windows": "rune src/main.zig --windows --x64 --arm64 --x86"
   }
@@ -111,6 +112,18 @@ echo "----------------------------------------"
 echo "All builds completed successfully."
 echo "Binaries are in: $OUT_DIR/"
 ```
+
+## Supoted targets
+
+| Os-Arch-Abi        | ASM | Zig | Rust | C   | C++ | C#  | Java | Html | Css | JS/JSX/TS/TSX |
+| ------------------ | --- | --- | ---- | --- | --- | --- | ---- | ---- | --- | ------------- |
+| linux-x86_64       | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| linux-x86_64-musl  | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| linux-x86          | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| macos-x86_64       | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| macos-aarch64      | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| windows-x86_64     | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| windows-x86_64-gnu | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
 
 ## TODO
 

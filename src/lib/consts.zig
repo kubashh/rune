@@ -45,52 +45,61 @@ pub const Optimization = enum {
     release,
     size,
 };
-pub const OsTags = enum {
-    linux,
-    macos,
-    windows,
-
-    // freebsd,
-    // openbsd,
-
-    // wasi,
-
-    // freestanding,
-    // uefi,
-    // rtems,
+pub const Target = enum {
+    @"linux-x86_64",
+    @"linux-x86_64-musl",
+    @"linux-x86",
+    @"macos-aarch64", // macOS ARM64 (Apple Silicon)
+    @"macos-x86_64", // (Intel)
+    @"windows-x86_64",
+    @"windows-x86_64-gnu",
+    // @"windows-x86",
+    browser, // wasm / js / ts
 };
-pub const Arch = enum {
-    x86_64,
-    x86,
-    // aarch64,
-    // arm,
+// const OsTags = enum {
+//     linux,
+//     macos,
+//     windows,
 
-    // thumb, // freestanding
-    // riscv32, // freestanding
+//     // freebsd,
+//     // openbsd,
 
-    // riscv64, // freestanding | rtems
+//     // wasi,
 
-    // powerpc, // rtems
-    // sparc, // rtems
-};
-pub const Abi = enum {
-    gnu, // Linux | Windows
-    musl, // Linux
-    msvc, // Windows with Microsoft toolchain
-    none, // macOS, freestanding, bare metal, many non-libc targets
-    // android, // Android targets
-    // eabi, // ARM embedded
-    // eabihf, // ARM embedded
-    // gnueabihf, // Linux ARM hard-float
-};
+//     // freestanding,
+//     // uefi,
+//     // rtems,
+// };
+// const Arch = enum {
+//     x86_64,
+//     x86,
+//     // aarch64,
+//     // arm,
+
+//     // thumb, // freestanding
+//     // riscv32, // freestanding
+
+//     // riscv64, // freestanding | rtems
+
+//     // powerpc, // rtems
+//     // sparc, // rtems
+// };
+// const Abi = enum {
+//     gnu, // Linux | Windows
+//     musl, // Linux
+//     msvc, // Windows with Microsoft toolchain
+//     none, // macOS, freestanding, bare metal, many non-libc targets
+//     // android, // Android targets
+//     // eabi, // ARM embedded
+//     // eabihf, // ARM embedded
+//     // gnueabihf, // Linux ARM hard-float
+// };
 
 pub const Config = struct {
     inputPath: []const u8,
     outputPath: []const u8,
     extention: Extention,
-    os: OsTags,
-    arch: Arch,
-    abi: Abi,
+    target: Target,
     opt: Optimization,
     zigLibDir: []const u8,
     run: bool,
