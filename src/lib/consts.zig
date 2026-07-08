@@ -1,6 +1,5 @@
 const std = @import("std");
-
-pub const allocator = std.heap.page_allocator;
+const builtin = @import("builtin");
 
 pub const Color = struct {
     pub const reset = "\x1b[0m";
@@ -48,52 +47,62 @@ pub const Optimization = enum {
 pub const Target = enum {
     @"linux-x86_64",
     @"linux-x86_64-musl",
-    @"linux-x86",
+    @"linux-aarch64",
     @"macos-aarch64", // macOS ARM64 (Apple Silicon)
     @"macos-x86_64", // (Intel)
     @"windows-x86_64",
     @"windows-x86_64-gnu",
     // @"windows-x86",
-    browser, // wasm / js / ts
+    browser, // wasm / html / css / js / ts
 };
-// const OsTags = enum {
-//     linux,
-//     macos,
-//     windows,
 
-//     // freebsd,
-//     // openbsd,
+//  OsTags
+//      linux, macos, windows
+//      freebsd, openbsd
+//      wasi
+//      freestanding, uefi, rtems,
 
-//     // wasi,
+//  Arch
+//      x86_64, x86, aarch64, arm,
+//      thumb (freestanding), iscv32 (freestanding)
+//      iscv64 (freestanding | rtems)
+//      powerpc (rtems), sparc (rtems)
 
-//     // freestanding,
-//     // uefi,
-//     // rtems,
-// };
-// const Arch = enum {
-//     x86_64,
-//     x86,
-//     // aarch64,
-//     // arm,
+//  Abi
+//      gnu (Linux | Windows)
+//      musl (Linux)
+//      msvc (Windows with Microsoft toolchain)
+//      none (macOS, freestanding, bare metal, many non-libc targets)
+//      android (Android targets)
+//      eabi (ARM embedded)
+//      eabihf (ARM embedded)
+//      gnueabihf (Linux ARM hard-float)
 
-//     // thumb, // freestanding
-//     // riscv32, // freestanding
-
-//     // riscv64, // freestanding | rtems
-
-//     // powerpc, // rtems
-//     // sparc, // rtems
-// };
-// const Abi = enum {
-//     gnu, // Linux | Windows
-//     musl, // Linux
-//     msvc, // Windows with Microsoft toolchain
-//     none, // macOS, freestanding, bare metal, many non-libc targets
-//     // android, // Android targets
-//     // eabi, // ARM embedded
-//     // eabihf, // ARM embedded
-//     // gnueabihf, // Linux ARM hard-float
-// };
+pub const defaultTarget = switch (builtin.target.os.tag) {
+    .linux => switch (builtin.target.cpu.arch) {
+        .x86_64 => switch (builtin.target.abi) {
+            .gnu => .@"linux-x86_64",
+            .musl => .@"linux-x86_64-musl",
+            else => .browser,
+        },
+        .aarch64 => .@"linux-aarch64",
+        else => .browser,
+    },
+    .macos => switch (builtin.target.cpu.arch) {
+        .aarch64 => .@"macos-aarch64",
+        .x86_64 => .@"macos-x86_64",
+        else => .browser,
+    },
+    .windows => switch (builtin.target.cpu.arch) {
+        .x86_64 => switch (builtin.target.abi) {
+            .msvc => .@"windows-x86_64",
+            .gnu => .@"window-x86_64-musl",
+            else => .browser,
+        },
+        else => .browser,
+    },
+    else => .browser,
+};
 
 pub const Config = struct {
     inputPath: []const u8,

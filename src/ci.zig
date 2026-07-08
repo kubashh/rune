@@ -41,32 +41,7 @@ pub fn processArgs(init: std.process.Init) Config {
         .outputPath = ".cache/rune/tmp",
         .extention = extention,
         .opt = .debug,
-        .target = switch (builtin.target.os.tag) {
-            .linux => switch (builtin.target.cpu.arch) {
-                .x86_64 => switch (builtin.target.abi) {
-                    .gnu => .@"linux-x86_64",
-                    .musl => .@"linux-x86_64-musl",
-                    else => .browser,
-                },
-                .x86 => .@"linux-x86",
-                else => .browser,
-            },
-            .macos => switch (builtin.target.cpu.arch) {
-                .aarch64 => .@"macos-aarch64",
-                .x86_64 => .@"macos-x86_64",
-                else => .browser,
-            },
-            .windows => switch (builtin.target.cpu.arch) {
-                .x86_64 => switch (builtin.target.abi) {
-                    .msvc => .@"windows-x86_64",
-                    .gnu => .@"window-x86_64-musl",
-                    else => .browser,
-                },
-                else => .browser,
-            },
-            else => .browser,
-        },
-        // .zigLibDir = "/opt/zig-0.16.0/lib",
+        .target = consts.defaultTarget,
         .run = true,
     };
 
@@ -90,14 +65,7 @@ pub fn processArgs(init: std.process.Init) Config {
 fn handleArg(config: *Config, arg: []const u8) void {
     if (handleOptimalization(config, arg)) return;
     if (handleTarget(config, arg)) return;
-
-    // Handle run flag
-    if (std.mem.eql(u8, arg, "--run")) {
-        if (config.run)
-            printErrExit("--run has no effect when no output path is provided\n", .{});
-        config.run = true;
-        return;
-    }
+    if (handleRunFlag(config, arg)) return;
 
     // Handle help
     if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
@@ -134,8 +102,8 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
             config.target = .@"linux-x86_64";
         } else if (std.mem.eql(u8, value, "linux-x86_64-musl")) {
             config.target = .@"linux-x86_64-musl";
-        } else if (std.mem.eql(u8, value, "linux-x86")) {
-            config.target = .@"linux-x86";
+        } else if (std.mem.eql(u8, value, "linux-aarch64")) {
+            config.target = .@"linux-aarch64";
         } else if (std.mem.eql(u8, value, "macos-x86_64")) {
             config.target = .@"macos-x86_64";
         } else if (std.mem.eql(u8, value, "macos-aarch64")) {
@@ -156,11 +124,24 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
     return true;
 }
 
-fn handleAbi(abiString: []const u8) consts.Abi {
-    if (std.mem.eql(u8, abiString, "gnu")) return .gnu;
-    if (std.mem.eql(u8, abiString, "musl")) return .musl;
-    if (std.mem.eql(u8, abiString, "msvc")) return .msvc;
-    return .none;
+fn handleRunFlag(config: *Config, arg: []const u8) bool {
+    if (std.mem.eql(u8, arg, "--run")) {
+        if (config.run)
+            printErrExit("--run has no effect when no output path is provided\n", .{});
+        if (config.target == consts.defaultTarget) {
+            config.run = true;
+            return true;
+        }
+        if (builtin.target.os.tag == .linux and config.target == .@"windows-x86_64") {
+            // TODO check is wine exists then run exe via wine
+            printErrExit("wine unsopported on linux yet\n", .{});
+            // config.run = true;
+            // return;
+        }
+        printErrExit("--run flag unsupported for target: {} on {}\n", .{ config.target, consts.defaultTarget });
+    }
+
+    return false;
 }
 
 fn printUsage() void {
@@ -170,7 +151,7 @@ fn printUsage() void {
         \\  --debug | --safe | --release | --size           Set optimization level (default: --debug)
         \\  --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
         \\  supported targets:
-        \\    linux-x86_64, linux-x86_64-musl, linux-x86        Linux
+        \\    linux-x86_64, linux-x86_64-musl, linux-aarch64    Linux
         \\    macos-x86_64, macos-aarch64                       Darwin
         \\    windows-x86_64, windows-x86_64-gnu                Windows
         \\    browser                                           Wasm | HTML | JS | TS

@@ -59,71 +59,52 @@ Supported extentions:
 ## Build with zig
 
 ```sh
-#!/usr/bin/env bash
-# set -euo pipefail
-
-# Cross-platform build script using Zig
+# Cross-platform build script using rune for building Zig, C
 # Targets:
-#   - Windows x64
 #   - Linux x64
 #   - Linux ARM64
-#   - macOS x64 (Intel)
 #   - macOS ARM64 (Apple Silicon)
+#   - macOS x64 (Intel)
+#   - Windows x64
 
+rm -rf dist
+echo "building with different flags..."
 
-# Output directory
-OUT_DIR="dist"
-# Source file
-SRC="main.c"
-SRC_ZIG="main.zig"
+rune example/main.zig dist/bin/app-linux-x64-zig-debug --target=linux-x86_64 --debug     # debug
+rune example/main.zig dist/bin/app-linux-x64-zig-safe --target=linux-x86_64 --safe       # safe
+rune example/main.zig dist/bin/app-linux-x64-zig-size --target=linux-x86_64 --size       # size
+rune example/main.zig dist/bin/app-linux-x64-zig-release --target=linux-x86_64 --release # release
 
-# Start
-mkdir -p "$OUT_DIR"
-echo "Building $SRC and $SRC_ZIG with Zig cross-compilation..."
-echo "Output directory: $OUT_DIR"
-echo "----------------------------------------"
+echo "building Zig..."
 
-# Windows x64
-echo "[1/5] Building Windows x64..."
-zig cc "$SRC" -target x86_64-windows-gnu -O ReleaseFast -o "$OUT_DIR/app-windows-x64.exe"
-zig build-exe "$SRC_ZIG" -target x86_64-windows-gnu -O ReleaseFast -femit-bin="$OUT_DIR/app-windows-x64.exe"
+rune example/main.zig dist/bin/app-linux-x64-zig --target=linux-x86_64 --release     # Linux x64 (glibc-based)
+rune example/main.zig dist/bin/app-linux-arm64-zig --target=linux-aarch64 --release  # Linux ARM64 (aarch64)
+rune example/main.zig dist/bin/app-macos-arm64-zig --target=macos-aarch64 --release  # macOS ARM64 (Apple Silicon)
+rune example/main.zig dist/bin/app-macos-x64-zig --target=macos-x86_64 --release     # macOS x64 (Intel)
+rune example/main.zig dist/bin/app-windows-x64-zig --target=windows-x86_64 --release # Windows x64
 
-# Linux x64 (glibc-based)
-echo "[2/5] Building Linux x64..."
-zig cc "$SRC" -target x86_64-linux-gnu -O ReleaseFast -o "$OUT_DIR/app-linux-x64"
-zig build-exe "$SRC_ZIG" -target x86_64-linux-gnu -O ReleaseFast -femit-bin="$OUT_DIR/app-linux-x64"
+echo "building C..."
 
-# Linux ARM64 (aarch64)
-echo "[3/5] Building Linux ARM64..."
-zig cc "$SRC" -target aarch64-linux-gnu -O ReleaseFast -o "$OUT_DIR/app-linux-arm64"
-zig build-exe "$SRC_ZIG" -target aarch64-linux-gnu -O ReleaseFast -femit-bin="$OUT_DIR/app-linux-arm64"
+rune example/main.c dist/bin/app-linux-x64-c --target=linux-x86_64 --release     # Linux x64 (glibc-based)
+rune example/main.c dist/bin/app-linux-arm64-c --target=linux-aarch64 --release  # Linux ARM64 (aarch64)
+rune example/main.c dist/bin/app-macos-arm64-c --target=macos-aarch64 --release  # macOS ARM64 (Apple Silicon)
+rune example/main.c dist/bin/app-macos-x64-c --target=macos-x86_64 --release     # macOS x64 (Intel)
+rune example/main.c dist/bin/app-windows-x64-c --target=windows-x86_64 --release # Windows x64
 
-# macOS x64 (Intel)
-echo "[4/5] Building macOS x64..."
-zig cc "$SRC" -target x86_64-macos -O ReleaseFast -o "$OUT_DIR/app-macos-x64"
-zig build-exe "$SRC_ZIG" -target x86_64-macos -O ReleaseFast -femit-bin="$OUT_DIR/app-macos-x64"
-
-# macOS ARM64 (Apple Silicon)
-echo "[5/5] Building macOS ARM64..."
-zig cc "$SRC" -target aarch64-macos -O ReleaseFast -o "$OUT_DIR/app-macos-arm64"
-zig build-exe "$SRC_ZIG" -target aarch64-macos -O ReleaseFast -femit-bin="$OUT_DIR/app-macos-arm64"
-
-echo "----------------------------------------"
-echo "All builds completed successfully."
-echo "Binaries are in: $OUT_DIR/"
+echo "done."
 ```
 
 ## Supoted targets
 
 | Os-Arch-Abi        | ASM | Zig | Rust | C   | C++ | C#  | Java | Html | Css | JS/JSX/TS/TSX |
 | ------------------ | --- | --- | ---- | --- | --- | --- | ---- | ---- | --- | ------------- |
-| linux-x86_64       | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
-| linux-x86_64-musl  | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
-| linux-x86          | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
-| macos-x86_64       | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
-| macos-aarch64      | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
-| windows-x86_64     | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
-| windows-x86_64-gnu | ❌  | ❌  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| linux-x86_64       | ❌  | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| linux-x86_64-musl  | ❌  | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| linux-aarch64      | ❌  | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| macos-x86_64       | ❌  | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| macos-aarch64      | ❌  | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| windows-x86_64     | ❌  | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
+| windows-x86_64-gnu | ❌  | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            |
 
 ## TODO
 

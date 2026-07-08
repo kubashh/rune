@@ -1,5 +1,6 @@
 {
   "name": "rune",
   "version": "0.1.0-dev",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {}
 }
