@@ -55,7 +55,7 @@ pub const Target = enum {
     @"windows-x86_64-gnu",
     browser, // wasm / html / css / js / ts
 };
-pub const Runner = enum { native, wine, none };
+pub const Runner = enum { native, wine, wineUnchecked, none };
 
 //  OsTags
 //      1.  linux, macos, windows

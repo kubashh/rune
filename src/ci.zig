@@ -14,7 +14,7 @@ pub fn processArgs(init: std.process.Init) Config {
     var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
     const alloc = fba.allocator();
     var args = init.minimal.args.iterateAllocator(alloc) catch |err| {
-        printErrExit("when allocating cli args {}\n", .{err});
+        printErrExit("allocating cli args fail. err: {}\n", .{err});
     };
     defer args.deinit();
 
@@ -27,14 +27,22 @@ pub fn processArgs(init: std.process.Init) Config {
     if (args.next()) |firstArg| {
         handleHelpFlag(firstArg);
         if (firstArg[0] == '-') {
-            printErrExit("first argument is input path, never flag!\nArg passed: {s}\n", .{firstArg});
+            printErrExit(
+                \\first argument is input path, never flag!
+                \\Arg passed: {s}
+                \\run 'rune --help' for usage
+                \\
+            , .{firstArg});
         }
         inputPath = firstArg;
         extention = getExtention(firstArg);
     } else {
         // TODO handle rune.json
-        printUsage();
-        printErrExit("no entry specified!\nRun 'rune entry.exe'\n", .{});
+        printErrExit(
+            \\no entry specified!
+            \\Run 'rune entry.exe'
+            \\
+        , .{});
     }
 
     var config: Config = .{
@@ -72,7 +80,11 @@ fn handleArg(config: *Config, arg: []const u8) void {
     handleHelpFlag(arg);
 
     // Unhandled arg
-    printErrExit("unknown flag: {s}\n\n", .{arg});
+    printErrExit(
+        \\unknown flag: {s}
+        \\run 'rune --help' for usage
+        \\
+    , .{arg});
 }
 
 fn handleOptimalization(config: *Config, arg: []const u8) bool {
@@ -113,7 +125,11 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
         } else if (std.mem.eql(u8, value, "browser")) {
             config.target = .browser;
         } else {
-            printErrExit("bad --target flag! Try: --target=[target]\n", .{});
+            printErrExit(
+                \\bad --target flag! Try: --target=[target]
+                \\run 'rune --help' for usage
+                \\
+            , .{});
         }
     } else {
         printErrExit("bad --target flag! Try: --target=[target]\n", .{});
@@ -125,7 +141,11 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
 fn handleRunFlag(config: *Config, arg: []const u8) bool {
     if (std.mem.eql(u8, arg, "--run")) {
         if (config.runner != .none)
-            printErrExit("--run has no effect when no output path is provided\n", .{});
+            printErrExit(
+                \\--run has no effect when no output path is provided
+                \\remove --run flag from command
+                \\
+            , .{});
         if (config.target == consts.defaultTarget) {
             config.runner = .native;
             return true;
@@ -134,10 +154,15 @@ fn handleRunFlag(config: *Config, arg: []const u8) bool {
             // TODO check is wine exists then run exe via wine
             // exec wine dist/bin/rune-windows-x64 $@
             // may break when wine don't exists
-            config.runner = .wine;
+            // later change .wineUnchecked to .wine
+            config.runner = .wineUnchecked;
             return true;
         }
-        printErrExit("--run flag unsupported for target: {} on {}\n", .{ config.target, consts.defaultTarget });
+        printErrExit(
+            \\--run flag unsupported for target: {} on {}
+            \\remove --run flag from command
+            \\
+        , .{ config.target, consts.defaultTarget });
     }
 
     return false;
@@ -150,33 +175,35 @@ fn handleHelpFlag(arg: []const u8) void {
     }
 }
 
+const usageStr =
+    \\usage (rune {s}): rune [input_path] [output_path | flag] [flags]
+    \\flags:
+    \\  --debug | --safe | --release | --size           Set optimization level (default: --debug)
+    \\  --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
+    \\
+    \\supported targets:
+    \\    linux-x86_64, linux-x86_64-musl, linux-aarch64    Linux
+    \\    macos-x86_64, macos-aarch64                       Darwin
+    \\    windows-x86_64, windows-x86_64-gnu                Windows
+    \\    browser                                           Wasm | HTML | JS | TS
+    \\
+    \\  --run                                           Run compiled program. Use only when output_path is provided
+    \\  -h, --help                                      Show this help message
+    \\
+    \\example usage:
+    \\  rune src/main.zig
+    \\  rune src/main.c dist/main --release
+    // \\  rune src/server.ts
+    // \\  rune src/main.ts dist/main.js --size
+    // \\  rune src/index.html dist/index.html --size
+    \\
+    \\supported extentions:
+    \\  .zig, .c
+    \\
+;
+
 fn printUsage() void {
-    print(
-        \\usage (rune {s}): rune [input_path] [output_path | flag] [flags]
-        \\flags:
-        \\  --debug | --safe | --release | --size           Set optimization level (default: --debug)
-        \\  --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
-        \\
-        \\supported targets:
-        \\    linux-x86_64, linux-x86_64-musl, linux-aarch64    Linux
-        \\    macos-x86_64, macos-aarch64                       Darwin
-        \\    windows-x86_64, windows-x86_64-gnu                Windows
-        \\    browser                                           Wasm | HTML | JS | TS
-        \\
-        \\  --run                                           Run compiled program. Use only when output_path is provided
-        \\  -h, --help                                      Show this help message
-        \\
-        \\example usage:
-        \\  rune src/main.zig
-        \\  rune src/main.c dist/main --release
-        // \\  rune src/server.ts
-        // \\  rune src/main.ts dist/main.js --size
-        // \\  rune src/index.html dist/index.html --size
-        \\
-        \\supported extentions:
-        \\  .zig, .c
-        \\
-    , .{comptime consts.runeVersion});
+    print(usageStr, .{comptime consts.runeVersion});
 }
 
 fn getExtention(path: []const u8) Extention {

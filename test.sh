@@ -1,5 +1,4 @@
-# run it before commit. this script tests all possible targets
-
+# run before commit! this script tests building all possible targets
 clear
 rm ./dist -rf
 mkdir ./dist/bin -p

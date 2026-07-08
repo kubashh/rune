@@ -6,7 +6,7 @@ const Color = consts.Color;
 pub const print = std.debug.print;
 
 pub fn printErrExit(comptime fmt: []const u8, options: anytype) noreturn {
-    print(Color.red ++ "error:" ++ Color.reset ++ " " ++ fmt ++ "run 'rune --help' for usage\n", options);
+    std.log.err(fmt, options);
     std.process.exit(1);
 }
 

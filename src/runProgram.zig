@@ -4,32 +4,32 @@ const util = @import("./lib/util.zig");
 
 const Config = consts.Config;
 
-const print = util.print;
-const SpawnSyncError = util.SpawnSyncError;
-const spawnSync = util.spawnSync;
+const printErrExit = util.printErrExit;
 const spawnSyncInherit = util.spawnSyncInherit;
 
-pub fn runProgram(io: std.Io, config: Config) SpawnSyncError!void {
+pub fn runProgram(io: std.Io, config: Config) void {
     switch (config.runner) {
-        .native => try runNative(io, config),
-        .wine => try runWine(io, config),
+        .native => runNative(io, config),
+        .wineUnchecked => runWine(io, config),
         else => {},
     }
 }
 
-fn runNative(io: std.Io, config: Config) SpawnSyncError!void {
-    print("running {s}...\n\n", .{config.outputPath});
+fn runNative(io: std.Io, config: Config) void {
+    std.log.info("running {s}...\n", .{config.outputPath});
 
-    _ = try spawnSyncInherit(io, &[_][]const u8{
+    _ = spawnSyncInherit(io, &[_][]const u8{
         config.outputPath,
-    });
+    }) catch |err|
+        printErrExit("running on native system. err: {}\n", .{err});
 }
 
-fn runWine(io: std.Io, config: Config) SpawnSyncError!void {
-    print("running {s} with wine...\n\n", .{config.outputPath});
+fn runWine(io: std.Io, config: Config) void {
+    std.log.info("running {s} with wine...\n", .{config.outputPath});
 
-    _ = try spawnSyncInherit(io, &[_][]const u8{
+    _ = spawnSyncInherit(io, &[_][]const u8{
         "wine",
         config.outputPath,
-    });
+    }) catch |err|
+        printErrExit("running on native system. err: {}\n", .{err});
 }

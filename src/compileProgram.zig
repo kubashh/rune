@@ -7,17 +7,13 @@ const Color = consts.Color;
 
 const print = util.print;
 const printErrExit = util.printErrExit;
-const SpawnSyncError = util.SpawnSyncError;
 const spawnSync = util.spawnSync;
 const fileExistsCwd = util.fileExistsCwd;
-const CreateDirPathCwdError = util.CreateDirPathCwdError;
 const createDirPathCwd = util.createDirPathCwd;
 const measureStart = util.measureStart;
 const measurePrint = util.measurePrint;
 
-pub const CompileProgramError = error{OutOfMemory} || SpawnSyncError || CreateDirPathCwdError;
-
-pub fn compileProgram(io: std.Io, config: *Config) CompileProgramError!void {
+pub fn compileProgram(io: std.Io, config: *Config) void {
     var buf: [512]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
     const alloc = fba.allocator();
@@ -25,37 +21,32 @@ pub fn compileProgram(io: std.Io, config: *Config) CompileProgramError!void {
 
     processInputExistense(io, config.inputPath);
 
-    const buildCommand: []const u8 = try createBuildCommandAlloc(alloc, config);
+    const buildCommand: []const u8 = createBuildCommandAlloc(alloc, config) catch
+        printErrExit("out of memory while allocating build command!\n", .{});
     defer alloc.free(buildCommand);
 
-    printConfig(config, buildCommand);
-    try createDirPathCwd(io, outdir);
+    print("build command: {s}\n\n", .{buildCommand});
+    createDirPathCwd(io, outdir) catch |err|
+        std.log.warn(
+            \\can't create dir for output. err: {}
+            \\App still running but may break any time!
+            \\
+        , .{err});
 
     // Real compilation
-    _ = try spawnSync(io, .{
+    const term = spawnSync(io, .{
         .argv = &[_][]const u8{ "sh", "-c", buildCommand },
         .stdin = .ignore,
         .stdout = .inherit,
         .stderr = .inherit,
-    });
-}
+    }) catch |err|
+        printErrExit(
+            "spawning build command faild. err: {}\nbuild command: {s}\n",
+            .{ err, buildCommand },
+        );
 
-fn printConfig(config: *Config, command: []const u8) void {
-    print(
-        \\input path:   {s}
-        \\output path:  {s}
-        \\optimization: {}
-        \\target:       {}
-        \\build command:  {s}
-        \\
-        \\
-    , .{
-        config.inputPath,
-        config.outputPath,
-        config.opt,
-        config.target,
-        command,
-    });
+    if (term != 0)
+        config.runner = .none;
 }
 
 fn processInputExistense(io: std.Io, inputPath: []const u8) void {
@@ -66,7 +57,6 @@ fn processInputExistense(io: std.Io, inputPath: []const u8) void {
 
 fn createBuildCommandAlloc(alloc: std.mem.Allocator, config: *Config) error{OutOfMemory}![]const u8 {
     switch (config.extention) {
-        // zig build-exe src/main.zig -Doptimize=ReleaseSafe --name rune2 -femit-bin=dist/bin/rune4 --cache-dir .cache/zig --global-cache-dir /home/jakub/.cache/zig --zig-lib-dir /opt/zig-0.16.0/lib/ -target x86_64-macos
         .zig => return try std.fmt.allocPrint(
             alloc,
             "zig build-exe {s} -femit-bin={s} -Doptimize={s} -target {s} --cache-dir .cache/zig",
@@ -77,7 +67,11 @@ fn createBuildCommandAlloc(alloc: std.mem.Allocator, config: *Config) error{OutO
                 getTargetZig(config.target),
             },
         ),
-        .rs => printErrExit("rust not supported yet!\n", .{}),
+        .rs => printErrExit(
+            \\rust not supported yet (in development)!
+            \\see supported file extentions running 'run -h'
+            \\
+        , .{}),
         .c => return try std.fmt.allocPrint(
             alloc,
             "zig cc {s} -o {s} -Doptimize={s} -target {s}",
@@ -88,11 +82,16 @@ fn createBuildCommandAlloc(alloc: std.mem.Allocator, config: *Config) error{OutO
                 getTargetZig(config.target),
             },
         ),
-        .cpp => printErrExit("c++ not supported yet! Working on it\n", .{}),
+        .cpp => printErrExit(
+            \\c++ not supported yet (in development)!
+            \\see supported file extentions running 'run -h'
+            \\
+        , .{}),
         else => printErrExit(
-            Color.red ++ "unknown file extetnion:" ++ Color.reset ++ " {}\n",
-            .{config.extention},
-        ),
+            \\unknown file extetnion: {}
+            \\see supported file extentions running 'run -h'
+            \\
+        , .{config.extention}),
     }
 }
 
