@@ -3,21 +3,30 @@ const consts = @import("./consts.zig");
 
 const Color = consts.Color;
 
-const SpwanSyncError = std.process.SpawnError || std.process.Child.WaitError;
-
 pub const print = std.debug.print;
 
 pub fn printErrExit(comptime fmt: []const u8, options: anytype) noreturn {
-    std.debug.print(Color.red ++ "error:" ++ Color.reset ++ " " ++ fmt ++ "run 'rune --help' for usage\n", options);
+    print(Color.red ++ "error:" ++ Color.reset ++ " " ++ fmt ++ "run 'rune --help' for usage\n", options);
     std.process.exit(1);
 }
 
-pub fn spawnSync(io: std.Io, options: std.process.SpawnOptions) SpwanSyncError!std.process.Child.Term {
+pub const SpawnSyncError = std.process.SpawnError || std.process.Child.WaitError;
+
+pub fn spawnSync(io: std.Io, options: std.process.SpawnOptions) SpawnSyncError!u8 {
     var child = try std.process.spawn(io, options);
-    return try child.wait(io);
+    const result = try child.wait(io);
+    return result.exited;
 }
 
-// TODO use zig 0.16.0 file api's because of performance. Function for now works
+pub fn spawnSyncInherit(io: std.Io, argv: []const []const u8) SpawnSyncError!u8 {
+    return try spawnSync(io, .{
+        .argv = argv,
+        .stdin = .inherit,
+        .stdout = .inherit,
+        .stderr = .inherit,
+    });
+}
+
 pub fn fileExistsCwd(io: std.Io, path: []const u8) bool {
     const cwd = std.Io.Dir.cwd();
     _ = cwd.statFile(io, path, .{}) catch |err| switch (err) {
@@ -25,6 +34,13 @@ pub fn fileExistsCwd(io: std.Io, path: []const u8) bool {
         else => return true, // exists but e.g. permission; treat as "exists"
     };
     return true;
+}
+
+pub const CreateDirPathCwdError = std.Io.Dir.CreateDirPathError;
+
+pub fn createDirPathCwd(io: std.Io, path: []const u8) CreateDirPathCwdError!void {
+    const cwd = std.Io.Dir.cwd();
+    try cwd.createDirPath(io, path);
 }
 
 pub inline fn measureStart(io: std.Io) i96 {

@@ -1,6 +1,8 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+pub const runeVersion = "0.1.0-dev";
+
 pub const Color = struct {
     pub const reset = "\x1b[0m";
     pub const black = "\x1b[30m";
@@ -22,20 +24,19 @@ pub const Color = struct {
 };
 
 pub const Extention = enum {
+    zig,
+    rs,
     c,
     cpp,
     cs,
     java,
-    zig,
-    rs,
-    py,
     html,
     css,
     js,
     jsx,
     ts,
     tsx,
-    json,
+    py,
     unknown,
 };
 pub const Optimization = enum {
@@ -52,33 +53,33 @@ pub const Target = enum {
     @"macos-x86_64", // (Intel)
     @"windows-x86_64",
     @"windows-x86_64-gnu",
-    // @"windows-x86",
     browser, // wasm / html / css / js / ts
 };
+pub const Runner = enum { native, wine, none };
 
 //  OsTags
-//      linux, macos, windows
-//      freebsd, openbsd
-//      wasi
-//      freestanding, uefi, rtems,
+//      1.  linux, macos, windows
+//      2.  freebsd, openbsd
+//      3.  wasi
+//      4.  freestanding, uefi, rtems,
 
 //  Arch
-//      x86_64, x86, aarch64, arm,
-//      thumb (freestanding), iscv32 (freestanding)
-//      iscv64 (freestanding | rtems)
-//      powerpc (rtems), sparc (rtems)
+//      1.  x86_64, x86, aarch64, arm,
+//      2.  thumb (freestanding), iscv32 (freestanding)
+//      3.  iscv64 (freestanding | rtems)
+//      4.  powerpc (rtems), sparc (rtems)
 
 //  Abi
-//      gnu (Linux | Windows)
-//      musl (Linux)
-//      msvc (Windows with Microsoft toolchain)
-//      none (macOS, freestanding, bare metal, many non-libc targets)
-//      android (Android targets)
-//      eabi (ARM embedded)
-//      eabihf (ARM embedded)
-//      gnueabihf (Linux ARM hard-float)
+//      1.  gnu (Linux | Windows)
+//      1.  musl (Linux)
+//      1.  msvc (Windows with Microsoft toolchain)
+//      1.  none (macOS, freestanding, bare metal, many non-libc targets)
+//      2.  android (Android targets)
+//      3.  eabi (ARM embedded)
+//      4.  eabihf (ARM embedded)
+//      4.  gnueabihf (Linux ARM hard-float)
 
-pub const defaultTarget = switch (builtin.target.os.tag) {
+pub const defaultTarget: Target = switch (builtin.target.os.tag) {
     .linux => switch (builtin.target.cpu.arch) {
         .x86_64 => switch (builtin.target.abi) {
             .gnu => .@"linux-x86_64",
@@ -96,7 +97,7 @@ pub const defaultTarget = switch (builtin.target.os.tag) {
     .windows => switch (builtin.target.cpu.arch) {
         .x86_64 => switch (builtin.target.abi) {
             .msvc => .@"windows-x86_64",
-            .gnu => .@"window-x86_64-musl",
+            .gnu => .@"windows-x86_64-gnu",
             else => .browser,
         },
         else => .browser,
@@ -110,6 +111,5 @@ pub const Config = struct {
     extention: Extention,
     target: Target,
     opt: Optimization,
-    // zigLibDir: []const u8,
-    run: bool,
+    runner: Runner,
 };
