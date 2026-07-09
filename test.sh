@@ -18,6 +18,15 @@ zig build-exe src/main.zig -Doptimize=Debug --name rune -femit-bin=dist/bin/rune
 ./dist/bin/rune example/main.zig dist/bin/app-zig-macos-arm64    --target=macos-aarch64
 ./dist/bin/rune example/main.zig dist/bin/app-zig-macos-x64      --target=macos-x86_64
 ./dist/bin/rune example/main.zig dist/bin/app-zig-windows-x64    --target=windows-x86_64
+./dist/bin/rune example/wasm.zig dist/bin/app-zig-browser.wasm   --target=browser
+
+# build Rust
+./dist/bin/rune example/main.rs dist/bin/app-rs-linux-x64      --target=linux-x86_64
+./dist/bin/rune example/main.rs dist/bin/app-rs-linux-x64-musl --target=linux-x86_64-musl
+# ./dist/bin/rune example/main.rs dist/bin/app-rs-linux-arm64    --target=linux-aarch64
+# ./dist/bin/rune example/main.rs dist/bin/app-rs-macos-arm64    --target=macos-aarch64
+# ./dist/bin/rune example/main.rs dist/bin/app-rs-macos-x64      --target=macos-x86_64
+# ./dist/bin/rune example/main.rs dist/bin/app-rs-windows-x64    --target=windows-x86_64
 
 # build C
 ./dist/bin/rune example/main.c dist/bin/app-c-linux-x64      --target=linux-x86_64
@@ -26,6 +35,7 @@ zig build-exe src/main.zig -Doptimize=Debug --name rune -femit-bin=dist/bin/rune
 ./dist/bin/rune example/main.c dist/bin/app-c-macos-arm64    --target=macos-aarch64
 ./dist/bin/rune example/main.c dist/bin/app-c-macos-x64      --target=macos-x86_64
 ./dist/bin/rune example/main.c dist/bin/app-c-windows-x64    --target=windows-x86_64
+./dist/bin/rune example/wasm.c dist/bin/app-c-browser.wasm   --target=browser
 
 # build C++
 ./dist/bin/rune example/main.cpp dist/bin/app-cpp-linux-x64      --target=linux-x86_64
@@ -34,3 +44,4 @@ zig build-exe src/main.zig -Doptimize=Debug --name rune -femit-bin=dist/bin/rune
 ./dist/bin/rune example/main.cpp dist/bin/app-cpp-macos-arm64    --target=macos-aarch64
 ./dist/bin/rune example/main.cpp dist/bin/app-cpp-macos-x64      --target=macos-x86_64
 ./dist/bin/rune example/main.cpp dist/bin/app-cpp-windows-x64    --target=windows-x86_64
+./dist/bin/rune example/wasm.cpp dist/bin/app-cpp-browser.wasm   --target=browser

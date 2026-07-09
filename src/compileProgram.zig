@@ -73,23 +73,16 @@ fn createBuildCommandAlloc(alloc: std.mem.Allocator, config: *Config) error{OutO
                 getTargetZig(config.target),
             },
         ),
-        // ReleaseDebug
-        // rustc example/main.rs -o dist/bin/main-debug -C opt-level=0 -C overflow-checks=yes -C debug-assertions=yes -C debuginfo=2
-
-        // ReleaseSafe
-        // rustc example/main.rs -o dist/bin/main-safe -C opt-level=3 -C overflow-checks=yes -C debug-assertions=no -C lto=thin -C panic=abort -C strip=symbols
-
-        // ReleaseSmall
-        // rustc example/main.rs -o dist/bin/main-small -C opt-level=z -C overflow-checks=no -C debug-assertions=no -C codegen-units=1 -C lto=thin -C panic=abort -C strip=symbols
-
-        // ReleaseFast
-        // rustc example/main.rs -o dist/bin/main-fast -C opt-level=3 -C overflow-checks=no \
-        // -C debug-assertions=no -C lto=thin -C panic=abort -C strip=symbols
-        .rs => printErrExit(
-            \\rust not supported yet (in development)!
-            \\see supported file extentions running 'run -h'
-            \\
-        , .{}),
+        .rs => return try std.fmt.allocPrint(
+            alloc,
+            "rustc {s} -o {s} {s} --target {s}",
+            .{
+                config.inputPath,
+                config.outputPath,
+                getOptimizeRs(config.opt),
+                getTargetRs(config.target),
+            },
+        ),
         .c => return try std.fmt.allocPrint(
             alloc,
             "zig cc {s} -o {s} -Doptimize={s} -target {s}",
@@ -166,6 +159,28 @@ fn getTargetZig(target: consts.Target) []const u8 {
         .@"macos-aarch64" => "aarch64-macos",
         .@"windows-x86_64" => "x86_64-windows",
         .@"windows-x86_64-gnu" => "x86_64-windows-gnu",
-        .browser => "wasi-freestanding",
+        .browser => "wasm32-freestanding",
+    };
+}
+
+fn getOptimizeRs(opt: consts.Optimization) []const u8 {
+    return switch (opt) {
+        .debug => "-C opt-level=0 -C overflow-checks=yes -C debug-assertions=yes -C debuginfo=2",
+        .safe => "-C opt-level=3 -C overflow-checks=yes -C debug-assertions=no -C lto=thin -C panic=abort -C strip=symbols",
+        .fast => "-C opt-level=3 -C overflow-checks=no -C debug-assertions=no -C lto=thin -C panic=abort -C strip=symbols",
+        .size => "-C opt-level=z -C overflow-checks=no -C debug-assertions=no -C codegen-units=1 -C lto=thin -C panic=abort -C strip=symbols",
+    };
+}
+
+fn getTargetRs(target: consts.Target) []const u8 {
+    return switch (target) {
+        .@"linux-x86_64" => "x86_64-unknown-linux-gnu",
+        .@"linux-x86_64-musl" => "x86_64-unknown-linux-musl",
+        .@"linux-aarch64" => "aarch64-unknown-linux-gnu",
+        .@"macos-x86_64" => "aarch64-apple-darwin",
+        .@"macos-aarch64" => "x86_64-apple-darwin",
+        .@"windows-x86_64" => "x86_64-pc-windows-msvc",
+        .@"windows-x86_64-gnu" => "x86_64-pc-windows-gnu",
+        .browser => "wasm32-wasip1",
     };
 }

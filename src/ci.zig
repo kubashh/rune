@@ -206,6 +206,7 @@ const usageStr =
     \\example usage:
     \\  rune src/main.zig
     \\  rune src/main.c dist/main --fast
+    \\  rune src/main.cpp dist/main --debug
     // \\  rune src/server.ts
     // \\  rune src/main.ts dist/main.js --size
     // \\  rune src/index.html dist/index.html --size
