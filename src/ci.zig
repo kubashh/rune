@@ -3,6 +3,8 @@ const builtin = @import("builtin");
 const consts = @import("./lib/consts.zig");
 const util = @import("./lib/util.zig");
 
+const page_allocator = std.heap.page_allocator;
+
 const Config = consts.Config;
 const Extention = consts.Extention;
 
@@ -52,6 +54,7 @@ pub fn processArgs(init: std.process.Init) Config {
         .opt = .debug,
         .target = consts.defaultTarget,
         .runner = .native,
+        .runArgs = null,
     };
 
     if (args.next()) |outputPathOrFlag| {
@@ -62,7 +65,7 @@ pub fn processArgs(init: std.process.Init) Config {
                 printErrExit("output_path can't end with '/'\n", .{});
             config.outputPath = outputPathOrFlag;
             config.runner = .none;
-            config.opt = .release;
+            config.opt = .fast;
         }
     }
 
@@ -74,8 +77,8 @@ pub fn processArgs(init: std.process.Init) Config {
 }
 
 fn handleArg(config: *Config, arg: []const u8) void {
-    if (handleOptimalization(config, arg)) return;
     if (handleTarget(config, arg)) return;
+    if (handleOptimization(config, arg)) return;
     if (handleRunFlag(config, arg)) return;
     handleHelpFlag(arg);
 
@@ -87,13 +90,50 @@ fn handleArg(config: *Config, arg: []const u8) void {
     , .{arg});
 }
 
-fn handleOptimalization(config: *Config, arg: []const u8) bool {
+fn handleTarget(config: *Config, arg: []const u8) bool {
+    if (!std.mem.startsWith(u8, arg, "--target")) return false;
+
+    if (std.mem.indexOfScalar(u8, arg, '=')) |pos| {
+        const target = arg[pos + 1 ..];
+
+        if (std.mem.eql(u8, target, "linux-x86_64")) {
+            config.target = .@"linux-x86_64";
+        } else if (std.mem.eql(u8, target, "linux-x86_64-musl")) {
+            config.target = .@"linux-x86_64-musl";
+        } else if (std.mem.eql(u8, target, "linux-aarch64")) {
+            config.target = .@"linux-aarch64";
+        } else if (std.mem.eql(u8, target, "macos-x86_64")) {
+            config.target = .@"macos-x86_64";
+        } else if (std.mem.eql(u8, target, "macos-aarch64")) {
+            config.target = .@"macos-aarch64";
+        } else if (std.mem.eql(u8, target, "windows-x86_64")) {
+            config.target = .@"windows-x86_64";
+        } else if (std.mem.eql(u8, target, "windows-x86_64-gnu")) {
+            config.target = .@"windows-x86_64-gnu";
+        } else if (std.mem.eql(u8, target, "browser")) {
+            config.target = .browser;
+        } else {
+            printErrExit(
+                \\bad target '{s}'!
+                \\try: --target=[target]
+                \\run 'rune --help' to see supported targets
+                \\
+            , .{target});
+        }
+    } else {
+        printErrExit("bad --target flag! try: --target=[target]\n", .{});
+    }
+
+    return true;
+}
+
+fn handleOptimization(config: *Config, arg: []const u8) bool {
     if (std.mem.eql(u8, arg, "--debug")) {
         config.opt = .debug;
     } else if (std.mem.eql(u8, arg, "--safe")) {
         config.opt = .safe;
-    } else if (std.mem.eql(u8, arg, "--release")) {
-        config.opt = .release;
+    } else if (std.mem.eql(u8, arg, "--fast")) {
+        config.opt = .fast;
     } else if (std.mem.eql(u8, arg, "--size")) {
         config.opt = .size;
     } else {
@@ -102,70 +142,43 @@ fn handleOptimalization(config: *Config, arg: []const u8) bool {
     return true;
 }
 
-fn handleTarget(config: *Config, arg: []const u8) bool {
-    if (!std.mem.startsWith(u8, arg, "--target")) return false;
-
-    if (std.mem.indexOfScalar(u8, arg, '=')) |pos| {
-        const value = arg[pos + 1 ..];
-
-        if (std.mem.eql(u8, value, "linux-x86_64")) {
-            config.target = .@"linux-x86_64";
-        } else if (std.mem.eql(u8, value, "linux-x86_64-musl")) {
-            config.target = .@"linux-x86_64-musl";
-        } else if (std.mem.eql(u8, value, "linux-aarch64")) {
-            config.target = .@"linux-aarch64";
-        } else if (std.mem.eql(u8, value, "macos-x86_64")) {
-            config.target = .@"macos-x86_64";
-        } else if (std.mem.eql(u8, value, "macos-aarch64")) {
-            config.target = .@"macos-aarch64";
-        } else if (std.mem.eql(u8, value, "windows-x86_64")) {
-            config.target = .@"windows-x86_64";
-        } else if (std.mem.eql(u8, value, "windows-x86_64-gnu")) {
-            config.target = .@"windows-x86_64-gnu";
-        } else if (std.mem.eql(u8, value, "browser")) {
-            config.target = .browser;
-        } else {
-            printErrExit(
-                \\bad --target flag! Try: --target=[target]
-                \\run 'rune --help' for usage
-                \\
-            , .{});
-        }
-    } else {
-        printErrExit("bad --target flag! Try: --target=[target]\n", .{});
-    }
-
-    return true;
-}
-
 fn handleRunFlag(config: *Config, arg: []const u8) bool {
-    if (std.mem.eql(u8, arg, "--run")) {
-        if (config.runner != .none)
-            printErrExit(
-                \\--run has no effect when no output path is provided
-                \\remove --run flag from command
-                \\
-            , .{});
-        if (config.target == consts.defaultTarget) {
-            config.runner = .native;
-            return true;
-        }
-        if ((builtin.target.os.tag == .linux or builtin.target.os.tag == .macos) and config.target == .@"windows-x86_64") {
-            // TODO check is wine exists then run exe via wine
-            // exec wine dist/bin/rune-windows-x64 $@
-            // may break when wine don't exists
-            // later change .wineUnchecked to .wine
-            config.runner = .wineUnchecked;
-            return true;
-        }
-        printErrExit(
+    if (!std.mem.startsWith(u8, arg, "--run")) return false;
+
+    if (config.target == consts.defaultTarget) {
+        config.runner = .native;
+    } else if ((builtin.target.os.tag == .linux or builtin.target.os.tag == .macos) and config.target == .@"windows-x86_64") {
+        // TODO check is wine exists then run exe via wine
+        // exec wine dist/bin/rune-windows-x64 $@
+        // may break when wine don't exists
+        // later change .wineUnchecked to .wine
+        config.runner = .wineUnchecked;
+    } else {
+        std.log.warn(
             \\--run flag unsupported for target: {} on {}
             \\remove --run flag from command
             \\
         , .{ config.target, consts.defaultTarget });
     }
 
-    return false;
+    if (std.mem.indexOfScalar(u8, arg, '=')) |pos| {
+        // TODO handle many args after --run or --args flag
+        const runArgs = arg[pos + 1 ..];
+        var list = std.ArrayList([]const u8).initCapacity(page_allocator, 8) catch
+            printErrExit("out of memory when making run args ArrayList", .{});
+        list.append(page_allocator, runArgs) catch
+            printErrExit("out of memory when allocating run args", .{});
+        config.runArgs = list;
+    }
+
+    return true;
+    // if (config.runner != .none)
+    //     printErrExit(
+    //         \\--run has no effect when no output path is provided
+    //         \\remove --run flag from command
+    //         \\
+    //     , .{});
+
 }
 
 fn handleHelpFlag(arg: []const u8) void {
@@ -178,7 +191,7 @@ fn handleHelpFlag(arg: []const u8) void {
 const usageStr =
     \\usage (rune {s}): rune [input_path] [output_path | flag] [flags]
     \\flags:
-    \\  --debug | --safe | --release | --size           Set optimization level (default: --debug)
+    \\  --debug | --safe | --fast | --size              Set optimization level (default: --debug, when output_path provided: --fast)
     \\  --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
     \\
     \\supported targets:
@@ -192,13 +205,13 @@ const usageStr =
     \\
     \\example usage:
     \\  rune src/main.zig
-    \\  rune src/main.c dist/main --release
+    \\  rune src/main.c dist/main --fast
     // \\  rune src/server.ts
     // \\  rune src/main.ts dist/main.js --size
     // \\  rune src/index.html dist/index.html --size
     \\
     \\supported extentions:
-    \\  .zig, .c
+    \\  .zig, .c, .cpp
     \\
 ;
 

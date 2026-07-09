@@ -2,8 +2,6 @@
 
 Build & run tool for organizing codebase
 
-[Zig 0.16.0 Realase Notes](https://ziglang.org/download/0.16.0/release-notes.html)
-
 ## Cli design
 
 ### 1. Cli args
@@ -11,7 +9,7 @@ Build & run tool for organizing codebase
 ```txt
 usage: rune [input_path] [output_path | flag] [flags]
 flags:
-  --debug | --safe | --release | --size           Set optimization level (default: --debug)
+  --debug | --safe | --fast | --size              Set optimization level (default: --debug, when output_path provided: --fast)
   --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
 
 supported targets:
@@ -25,24 +23,24 @@ supported targets:
 
 example usage:
   rune src/main.zig
-  rune src/main.c dist/main --release
+  rune src/main.c dist/main --releafastse
 
 supported extentions:
-  .zig, .c
+  .zig, .c, .cpp
 ```
 
-### 2. rune.json
+<!-- ### 2. rune.json
 
 ```json
 {
   "scripts:": {
     "default": "rune src/main.zig",
-    "build-linux": "rune src/main.zig --target=linux-x64 --release",
+    "build-linux": "rune src/main.zig --target=linux-x64 --fast",
     "build-macos": "rune src/main.zig --macos --arm64 --x64",
     "build-windows": "rune src/main.zig --windows --x64 --arm64 --x86"
   }
 }
-```
+``` -->
 
 ## Build code with rune
 
@@ -59,26 +57,26 @@ rm -rf dist
 echo "building with different flags..."
 
 # build with different optimalization flags
-rune example/main.zig dist/bin/app-linux-x64-zig-debug --target=linux-x86_64 --debug      # debug
-rune example/main.zig dist/bin/app-linux-x64-zig-safe --target=linux-x86_64 --safe        # safe
-rune example/main.zig dist/bin/app-linux-x64-zig-size --target=linux-x86_64 --size        # size
-rune example/main.zig dist/bin/app-linux-x64-zig-release --target=linux-x86_64 --release  # release
+rune example/main.zig dist/bin/app-linux-x64-zig-debug --target=linux-x86_64 --debug    # debug
+rune example/main.zig dist/bin/app-linux-x64-zig-safe --target=linux-x86_64 --safe      # safe
+rune example/main.zig dist/bin/app-linux-x64-zig-size --target=linux-x86_64 --size      # size
+rune example/main.zig dist/bin/app-linux-x64-zig-fast --target=linux-x86_64 --fast      # fast
 
 # build Zig
-rune example/main.zig dist/bin/app-linux-x64-zig --target=linux-x86_64 --release        # Linux x64 (glibc-based)
-rune example/main.zig dist/bin/app-linux-x64-zig --target=linux-x86_64-musl --release   # Linux x64 (musl-based)
-rune example/main.zig dist/bin/app-linux-arm64-zig --target=linux-aarch64 --release     # Linux ARM64 (aarch64)
-rune example/main.zig dist/bin/app-macos-arm64-zig --target=macos-aarch64 --release     # macOS ARM64 (Apple Silicon)
-rune example/main.zig dist/bin/app-macos-x64-zig --target=macos-x86_64 --release        # macOS x64 (Intel)
-rune example/main.zig dist/bin/app-windows-x64-zig --target=windows-x86_64 --release    # Windows x64
+rune example/main.zig dist/bin/app-linux-x64-zig --target=linux-x86_64 --fast       # Linux x64 (glibc-based)
+rune example/main.zig dist/bin/app-linux-x64-zig --target=linux-x86_64-musl --fast  # Linux x64 (musl-based)
+rune example/main.zig dist/bin/app-linux-arm64-zig --target=linux-aarch64 --fast    # Linux ARM64 (aarch64)
+rune example/main.zig dist/bin/app-macos-arm64-zig --target=macos-aarch64 --fast    # macOS ARM64 (Apple Silicon)
+rune example/main.zig dist/bin/app-macos-x64-zig --target=macos-x86_64 --fast       # macOS x64 (Intel)
+rune example/main.zig dist/bin/app-windows-x64-zig --target=windows-x86_64 --fast   # Windows x64
 
 # build C
-rune example/main.c dist/bin/app-linux-x64-c --target=linux-x86_64 --release        # Linux x64 (glibc-based)
-rune example/main.c dist/bin/app-linux-x64-c --target=linux-x86_64-musl --release   # Linux x64 (musl-based)
-rune example/main.c dist/bin/app-linux-arm64-c --target=linux-aarch64 --release     # Linux ARM64 (aarch64)
-rune example/main.c dist/bin/app-macos-arm64-c --target=macos-aarch64 --release     # macOS ARM64 (Apple Silicon)
-rune example/main.c dist/bin/app-macos-x64-c --target=macos-x86_64 --release        # macOS x64 (Intel)
-rune example/main.c dist/bin/app-windows-x64-c --target=windows-x86_64 --release    # Windows x64
+rune example/main.c dist/bin/app-linux-x64-c --target=linux-x86_64 --fast       # Linux x64 (glibc-based)
+rune example/main.c dist/bin/app-linux-x64-c --target=linux-x86_64-musl --fast  # Linux x64 (musl-based)
+rune example/main.c dist/bin/app-linux-arm64-c --target=linux-aarch64 --fast    # Linux ARM64 (aarch64)
+rune example/main.c dist/bin/app-macos-arm64-c --target=macos-aarch64 --fast    # macOS ARM64 (Apple Silicon)
+rune example/main.c dist/bin/app-macos-x64-c --target=macos-x86_64 --fast       # macOS x64 (Intel)
+rune example/main.c dist/bin/app-windows-x64-c --target=windows-x86_64 --fast   # Windows x64
 ```
 
 ## Suppoted
@@ -87,26 +85,25 @@ rune example/main.c dist/bin/app-windows-x64-c --target=windows-x86_64 --release
 
 | Os-Arch-Abi        | Zig | Rust | C   | C++ | C#  | Java | Html | Css | JS/JSX/TS/TSX | Py  |
 | ------------------ | --- | ---- | --- | --- | --- | ---- | ---- | --- | ------------- | --- |
-| linux-x86_64       | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| linux-x86_64-musl  | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| linux-aarch64      | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| macos-x86_64       | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| macos-aarch64      | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| windows-x86_64     | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| windows-x86_64-gnu | ✅  | ❌   | ✅  | ❌  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| linux-x86_64       | ✅  | ❌   | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| linux-x86_64-musl  | ✅  | ❌   | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| linux-aarch64      | ✅  | ❌   | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| macos-x86_64       | ✅  | ❌   | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| macos-aarch64      | ✅  | ❌   | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| windows-x86_64     | ✅  | ❌   | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| windows-x86_64-gnu | ✅  | ❌   | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
 
 ### Code runners (Testing exe's)
 
-| target             | linux-x86_64 | linux-x86_64-musl | macos-x86_64 | macos-aarch64 | windows-x86_64 | windows-x86_64-gnu |
-| ------------------ | ------------ | ----------------- | ------------ | ------------- | -------------- | ------------------ |
-| native             | ✅           | ✅                | ✅           | ✅            | ✅             | ✅                 |
-| linux-x86_64       | ✅           | ❌                | ❌           | ❌            | ❌             | ❌                 |
-| linux-x86_64-musl  | ❌           | ✅                | ❌           | ❌            | ❌             | ❌                 |
-| linux-aarch64      | ❌           | ❌                | ✅           | ❌            | ❌             | ❌                 |
-| macos-x86_64       | ❌           | ❌                | ❌           | ❌            | ❌             | ❌                 |
-| macos-aarch64      | ❌           | ❌                | ❌           | ✅            | ❌             | ❌                 |
-| windows-x86_64     | ✅ (wine)    | ✅ (wine)         | ✅ (wine)    | ✅ (wine)     | ✅             | ❌                 |
-| windows-x86_64-gnu | ❌           | ❌                | ❌           | ❌            | ❌             | ✅                 |
+| target             | linux-x86_64 | linux-x86_64-musl | macos-x86_64  | macos-aarch64 | windows-x86_64 | windows-x86_64-gnu |
+| ------------------ | ------------ | ----------------- | ------------- | ------------- | -------------- | ------------------ |
+| linux-x86_64       | ✅           | ❌                | ❌            | ❌            | ❌             | ❌                 |
+| linux-x86_64-musl  | ❌           | ✅                | ❌            | ❌            | ❌             | ❌                 |
+| linux-aarch64      | ❌           | ❌                | ✅            | ❌            | ❌             | ❌                 |
+| macos-x86_64       | ❌           | ❌                | ❌            | ❌            | ❌             | ❌                 |
+| macos-aarch64      | ❌           | ❌                | ❌            | ✅            | ❌             | ❌                 |
+| windows-x86_64     | ✅ (wine)    | ⚠️ (wine - ?)     | ⚠️ (wine - ?) | ⚠️ (wine - ?) | ✅             | ❌                 |
+| windows-x86_64-gnu | ❌           | ❌                | ❌            | ❌            | ❌             | ✅                 |
 
 ## TODO
 
@@ -117,3 +114,4 @@ rune example/main.c dist/bin/app-windows-x64-c --target=windows-x86_64 --release
   - Dev mode
   - Release mode
 - Build target windows: create .pdb file only when opt == .debug
+- fix runProgram with "" (empty string)

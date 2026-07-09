@@ -42,7 +42,7 @@ pub const Extention = enum {
 pub const Optimization = enum {
     debug,
     safe,
-    release,
+    fast,
     size,
 };
 pub const Target = enum {
@@ -112,4 +112,5 @@ pub const Config = struct {
     target: Target,
     opt: Optimization,
     runner: Runner,
+    runArgs: ?std.ArrayList([]const u8),
 };

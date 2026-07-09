@@ -17,7 +17,7 @@ pub fn compileProgram(io: std.Io, config: *Config) void {
     var buf: [512]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
     const alloc = fba.allocator();
-    const outdir: []const u8 = std.fs.path.dirname(config.outputPath).?;
+    const outdir: ?[]const u8 = std.fs.path.dirname(config.outputPath);
 
     processInputExistense(io, config.inputPath);
 
@@ -26,12 +26,13 @@ pub fn compileProgram(io: std.Io, config: *Config) void {
     defer alloc.free(buildCommand);
 
     print("build command: {s}\n\n", .{buildCommand});
-    createDirPathCwd(io, outdir) catch |err|
-        std.log.warn(
-            \\can't create dir for output. err: {}
-            \\App still running but may break any time!
-            \\
-        , .{err});
+    if (outdir) |validOutdir|
+        createDirPathCwd(io, validOutdir) catch |err|
+            std.log.warn(
+                \\can't create dir for output. err: {}
+                \\App still running but may break any time!
+                \\
+            , .{err});
 
     // Real compilation
     const term = spawnSync(io, .{
@@ -51,7 +52,12 @@ pub fn compileProgram(io: std.Io, config: *Config) void {
 
 fn processInputExistense(io: std.Io, inputPath: []const u8) void {
     if (!fileExistsCwd(io, inputPath)) {
-        printErrExit("file '{s}' not exists!\n", .{inputPath});
+        printErrExit(
+            \\file '{s}' not exists!
+            \\first argument is always source code path
+            \\example: src/main.c
+            \\
+        , .{inputPath});
     }
 }
 
@@ -67,6 +73,18 @@ fn createBuildCommandAlloc(alloc: std.mem.Allocator, config: *Config) error{OutO
                 getTargetZig(config.target),
             },
         ),
+        // ReleaseDebug
+        // rustc example/main.rs -o dist/bin/main-debug -C opt-level=0 -C overflow-checks=yes -C debug-assertions=yes -C debuginfo=2
+
+        // ReleaseSafe
+        // rustc example/main.rs -o dist/bin/main-safe -C opt-level=3 -C overflow-checks=yes -C debug-assertions=no -C lto=thin -C panic=abort -C strip=symbols
+
+        // ReleaseSmall
+        // rustc example/main.rs -o dist/bin/main-small -C opt-level=z -C overflow-checks=no -C debug-assertions=no -C codegen-units=1 -C lto=thin -C panic=abort -C strip=symbols
+
+        // ReleaseFast
+        // rustc example/main.rs -o dist/bin/main-fast -C opt-level=3 -C overflow-checks=no \
+        // -C debug-assertions=no -C lto=thin -C panic=abort -C strip=symbols
         .rs => printErrExit(
             \\rust not supported yet (in development)!
             \\see supported file extentions running 'run -h'
@@ -82,8 +100,43 @@ fn createBuildCommandAlloc(alloc: std.mem.Allocator, config: *Config) error{OutO
                 getTargetZig(config.target),
             },
         ),
-        .cpp => printErrExit(
-            \\c++ not supported yet (in development)!
+        .cpp => return try std.fmt.allocPrint(
+            alloc,
+            "zig c++ {s} -o {s} -Doptimize={s} -target {s}",
+            .{
+                config.inputPath,
+                config.outputPath,
+                getOptimizeZig(config.opt),
+                getTargetZig(config.target),
+            },
+        ),
+        .cs => printErrExit(
+            \\C# not supported yet (in development)!
+            \\see supported file extentions running 'run -h'
+            \\
+        , .{}),
+        .java => printErrExit(
+            \\java not supported yet (in development)!
+            \\see supported file extentions running 'run -h'
+            \\
+        , .{}),
+        .html => printErrExit(
+            \\html not supported yet (in development)!
+            \\see supported file extentions running 'run -h'
+            \\
+        , .{}),
+        .css => printErrExit(
+            \\css not supported yet (in development)!
+            \\see supported file extentions running 'run -h'
+            \\
+        , .{}),
+        .js, .jsx, .ts, .tsx => printErrExit(
+            \\js/jsx/ts/tsx not supported yet (in development)!
+            \\see supported file extentions running 'run -h'
+            \\
+        , .{}),
+        .py => printErrExit(
+            \\python not supported yet (in development)!
             \\see supported file extentions running 'run -h'
             \\
         , .{}),
@@ -99,7 +152,7 @@ fn getOptimizeZig(opt: consts.Optimization) []const u8 {
     return switch (opt) {
         .debug => "Debug",
         .safe => "ReleaseSafe",
-        .release => "ReleaseFast",
+        .fast => "ReleaseFast",
         .size => "ReleaseSize",
     };
 }
