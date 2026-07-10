@@ -10,7 +10,6 @@ const printErrExit = util.printErrExit;
 const spawnSync = util.spawnSync;
 const fileExistsCwd = util.fileExistsCwd;
 const createDirPathCwd = util.createDirPathCwd;
-const measureStart = util.measureStart;
 const measurePrint = util.measurePrint;
 
 pub fn compileProgram(io: std.Io, config: *Config) void {
@@ -25,7 +24,7 @@ pub fn compileProgram(io: std.Io, config: *Config) void {
         printErrExit("out of memory while allocating build command!\n", .{});
     defer alloc.free(buildCommand);
 
-    print("build command: {s}\n\n", .{buildCommand});
+    std.log.info("build command: {s}\n", .{buildCommand});
     if (outdir) |validOutdir|
         createDirPathCwd(io, validOutdir) catch |err|
             std.log.warn(
@@ -55,7 +54,7 @@ fn processInputExistense(io: std.Io, inputPath: []const u8) void {
         printErrExit(
             \\file '{s}' not exists!
             \\first argument is always source code path
-            \\example: src/main.c
+            \\try: rune src/main.c
             \\
         , .{inputPath});
     }

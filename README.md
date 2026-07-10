@@ -102,15 +102,15 @@ echo "building with different flags..."
 
 ### Targets
 
-| Os-Arch-Abi        | Zig | Rust        | C   | C++ | C#  | Java | Html | Css | JS/JSX/TS/TSX | Py  |
-| ------------------ | --- | ----------- | --- | --- | --- | ---- | ---- | --- | ------------- | --- |
-| linux-x86_64       | ✅  | ⚠️ (native) | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| linux-x86_64-musl  | ✅  | ⚠️ (native) | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| linux-aarch64      | ✅  | ⚠️ (native) | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| macos-x86_64       | ✅  | ⚠️ (native) | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| macos-aarch64      | ✅  | ⚠️ (native) | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| windows-x86_64     | ✅  | ⚠️ (native) | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| windows-x86_64-gnu | ✅  | ⚠️ (native) | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| Os-Arch-Abi        | Zig | Rust                      | C   | C++ | C#  | Java | Html | Css | JS/JSX/TS/TSX | Py  |
+| ------------------ | --- | ------------------------- | --- | --- | --- | ---- | ---- | --- | ------------- | --- |
+| linux-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| linux-x86_64-musl  | ✅  | ⚠️ (native, linux-x86_64) | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| linux-aarch64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| macos-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| macos-aarch64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| windows-x86_64     | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| windows-x86_64-gnu | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
 
 ### Code runners (Testing exe's)
 
@@ -118,8 +118,8 @@ echo "building with different flags..."
 | ------------------ | ------------ | ----------------- | ------------- | ------------- | -------------- | ------------------ |
 | linux-x86_64       | ✅           | ❌                | ❌            | ❌            | ❌             | ❌                 |
 | linux-x86_64-musl  | ❌           | ✅                | ❌            | ❌            | ❌             | ❌                 |
-| linux-aarch64      | ❌           | ❌                | ✅            | ❌            | ❌             | ❌                 |
-| macos-x86_64       | ❌           | ❌                | ❌            | ❌            | ❌             | ❌                 |
+| linux-aarch64      | ❌           | ❌                | ❌            | ❌            | ❌             | ❌                 |
+| macos-x86_64       | ❌           | ❌                | ✅            | ❌            | ❌             | ❌                 |
 | macos-aarch64      | ❌           | ❌                | ❌            | ✅            | ❌             | ❌                 |
 | windows-x86_64     | ✅ (wine)    | ⚠️ (wine - ?)     | ⚠️ (wine - ?) | ⚠️ (wine - ?) | ✅             | ❌                 |
 | windows-x86_64-gnu | ❌           | ❌                | ❌            | ❌            | ❌             | ✅                 |
@@ -133,4 +133,3 @@ echo "building with different flags..."
   - Dev mode
   - Release mode
 - build target windows: create .pdb file only when opt == .debug
-- fix runProgram with "" (empty string)

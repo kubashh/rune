@@ -3,6 +3,9 @@ const builtin = @import("builtin");
 
 pub const runeVersion = "0.1.0-dev";
 
+pub const StringList = std.ArrayList([]const u8);
+pub const tmp_alloc = std.heap.page_allocator;
+
 pub const Color = struct {
     pub const reset = "\x1b[0m";
     pub const black = "\x1b[30m";
@@ -55,7 +58,7 @@ pub const Target = enum {
     @"windows-x86_64-gnu",
     browser, // wasm / html / css / js / ts
 };
-pub const Runner = enum { native, wine, wineUnchecked, none };
+pub const Runner = enum { native, wine, none };
 
 //  OsTags
 //      1.  linux, macos, windows

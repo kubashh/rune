@@ -3,19 +3,20 @@ const builtin = @import("builtin");
 const consts = @import("./lib/consts.zig");
 const util = @import("./lib/util.zig");
 
-const page_allocator = std.heap.page_allocator;
-
-const Config = consts.Config;
+const tmp_alloc = consts.tmp_alloc;
+const StringList = consts.StringList;
 const Extention = consts.Extention;
+const Config = consts.Config;
 
 const print = util.print;
 const printErrExit = util.printErrExit;
+const cliProgramExists = util.cliProgramExists;
 
-pub fn processArgs(init: std.process.Init) Config {
+pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
     var buf: [1024]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
     const alloc = fba.allocator();
-    var args = init.minimal.args.iterateAllocator(alloc) catch |err| {
+    var args = argsObj.iterateAllocator(alloc) catch |err| {
         printErrExit("allocating cli args fail. err: {}\n", .{err});
     };
     defer args.deinit();
@@ -59,7 +60,7 @@ pub fn processArgs(init: std.process.Init) Config {
 
     if (args.next()) |outputPathOrFlag| {
         if (outputPathOrFlag[0] == '-') {
-            handleArg(&config, outputPathOrFlag);
+            handleArg(io, &config, outputPathOrFlag);
         } else {
             if (outputPathOrFlag[outputPathOrFlag.len - 1] == '/')
                 printErrExit("output_path can't end with '/'\n", .{});
@@ -70,16 +71,16 @@ pub fn processArgs(init: std.process.Init) Config {
     }
 
     while (args.next()) |arg| {
-        handleArg(&config, arg);
+        handleArg(io, &config, arg);
     }
 
     return config;
 }
 
-fn handleArg(config: *Config, arg: []const u8) void {
+fn handleArg(io: std.Io, config: *Config, arg: []const u8) void {
     if (handleTarget(config, arg)) return;
     if (handleOptimization(config, arg)) return;
-    if (handleRunFlag(config, arg)) return;
+    if (handleRunFlag(io, config, arg)) return;
     handleHelpFlag(arg);
 
     // Unhandled arg
@@ -142,17 +143,18 @@ fn handleOptimization(config: *Config, arg: []const u8) bool {
     return true;
 }
 
-fn handleRunFlag(config: *Config, arg: []const u8) bool {
+fn handleRunFlag(io: std.Io, config: *Config, arg: []const u8) bool {
     if (!std.mem.startsWith(u8, arg, "--run")) return false;
 
     if (config.target == consts.defaultTarget) {
         config.runner = .native;
     } else if ((builtin.target.os.tag == .linux or builtin.target.os.tag == .macos) and config.target == .@"windows-x86_64") {
-        // TODO check is wine exists then run exe via wine
-        // exec wine dist/bin/rune-windows-x64 $@
-        // may break when wine don't exists
-        // later change .wineUnchecked to .wine
-        config.runner = .wineUnchecked;
+        if (!cliProgramExists(io, "clang")) printErrExit(
+            \\wine don't exists! to run windows bin's on posix wine is required!
+            \\install wine
+            \\
+        , .{});
+        config.runner = .wine;
     } else {
         std.log.warn(
             \\--run flag unsupported for target: {} on {}
@@ -164,21 +166,14 @@ fn handleRunFlag(config: *Config, arg: []const u8) bool {
     if (std.mem.indexOfScalar(u8, arg, '=')) |pos| {
         // TODO handle many args after --run or --args flag
         const runArgs = arg[pos + 1 ..];
-        var list = std.ArrayList([]const u8).initCapacity(page_allocator, 8) catch
+        var list = StringList.initCapacity(tmp_alloc, 8) catch
             printErrExit("out of memory when making run args ArrayList", .{});
-        list.append(page_allocator, runArgs) catch
-            printErrExit("out of memory when allocating run args", .{});
+        list.append(tmp_alloc, runArgs) catch
+            printErrExit("out of memory when allocating run arg", .{});
         config.runArgs = list;
     }
 
     return true;
-    // if (config.runner != .none)
-    //     printErrExit(
-    //         \\--run has no effect when no output path is provided
-    //         \\remove --run flag from command
-    //         \\
-    //     , .{});
-
 }
 
 fn handleHelpFlag(arg: []const u8) void {

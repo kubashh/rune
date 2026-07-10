@@ -2,6 +2,8 @@ const std = @import("std");
 const consts = @import("./lib/consts.zig");
 const util = @import("./lib/util.zig");
 
+const tmp_alloc = consts.tmp_alloc;
+const StringList = consts.StringList;
 const Runner = consts.Runner;
 const RunArgs = consts.RunArgs;
 const Config = consts.Config;
@@ -10,54 +12,51 @@ const printErrExit = util.printErrExit;
 const SpawnSyncError = util.SpawnSyncError;
 const spawnSyncInherit = util.spawnSyncInherit;
 
-const ExeArgs = [3][]const u8;
-
 pub fn runProgram(io: std.Io, config: Config) void {
     if (config.runner == .none) return;
 
     printRunInfo(config);
 
-    // TODO fix runProgram with "" (empty string)
-    var exeArgs: ExeArgs = .{ undefined, undefined, undefined };
+    var exeArgs = StringList.initCapacity(tmp_alloc, 8) catch
+        printErrExit("out of memory when making run args ArrayList", .{});
+    defer exeArgs.deinit(tmp_alloc);
 
     switch (config.runner) {
         .native => createCommandNative(&exeArgs, config),
-        .wineUnchecked => createCommandWine(&exeArgs, config),
+        .wine => createCommandWine(&exeArgs, config),
         else => {}, // It will never happen
     }
 
-    _ = spawnSyncInherit(io, &exeArgs) catch |err|
+    // cross-runner add args
+    if (config.runArgs) |runArgs| {
+        exeArgs.append(tmp_alloc, runArgs.getLast()) catch
+            printErrExit("out of memory when allocating run arg", .{});
+    }
+
+    _ = spawnSyncInherit(io, exeArgs.items) catch |err|
         printRunErrExit(config, err);
 }
 
-fn createCommandNative(exeArgs: *ExeArgs, config: Config) void {
-    exeArgs[0] = config.outputPath;
-    exeArgs[1] = "";
-    if (config.runArgs) |runArgs| {
-        exeArgs[2] = runArgs.getLast();
-    } else {
-        exeArgs[2] = "";
-    }
+fn createCommandNative(exeArgs: *StringList, config: Config) void {
+    exeArgs.append(tmp_alloc, config.outputPath) catch
+        printErrExit("out of memory when allocating run arg", .{});
 }
 
-fn createCommandWine(exeArgs: *ExeArgs, config: Config) void {
-    exeArgs[0] = "wine";
-    exeArgs[1] = config.outputPath;
-    if (config.runArgs) |runArgs| {
-        exeArgs[2] = runArgs.getLast();
-    } else {
-        exeArgs[2] = "";
-    }
+fn createCommandWine(exeArgs: *StringList, config: Config) void {
+    exeArgs.append(tmp_alloc, "wine") catch
+        printErrExit("out of memory when allocating run arg", .{});
+    exeArgs.append(tmp_alloc, config.outputPath) catch
+        printErrExit("out of memory when allocating run arg", .{});
 }
 
 fn printRunInfo(config: Config) void {
     if (config.runArgs) |runArgs| {
         std.log.info(
-            "running {s} with {s} with args: '{s}'...\n",
+            "running {s} with {s} with args: '{s}'\n",
             .{ config.outputPath, getRunnerName(config.runner), runArgs.getLast() },
         );
     } else {
-        std.log.info("running {s} with {s}...\n", .{ config.outputPath, getRunnerName(config.runner) });
+        std.log.info("running {s} with {s}\n", .{ config.outputPath, getRunnerName(config.runner) });
     }
 }
 
@@ -75,7 +74,7 @@ fn printRunErrExit(config: Config, err: SpawnSyncError) noreturn {
 fn getRunnerName(runner: Runner) []const u8 {
     return switch (runner) {
         .native => "native system",
-        .wineUnchecked => "wine",
+        .wine => "wine",
         else => "",
     };
 }
