@@ -18,8 +18,8 @@ supported targets:
     windows-x86_64, windows-x86_64-gnu                Windows
     browser                                           Wasm | HTML | JS | TS
 
-  --run                                           Run compiled program. Use only when output_path is provided
-  -h, --help                                      Show this help message
+  --run                   Run compiled program. evry arg passed after --run will be pass into running exe
+  -h, --help              Show this help message
 
 example usage:
   rune src/main.zig --run="my arg"

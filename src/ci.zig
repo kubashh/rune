@@ -6,6 +6,7 @@ const util = @import("./lib/util.zig");
 const tmp_alloc = consts.tmp_alloc;
 const StringList = consts.StringList;
 const Extention = consts.Extention;
+const Runner = consts.Runner;
 const Config = consts.Config;
 
 const print = util.print;
@@ -65,6 +66,11 @@ pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
         } else {
             if (outputPathOrFlag[outputPathOrFlag.len - 1] == '/')
                 printErrExit("output_path can't end with '/'\n", .{});
+            if (std.mem.indexOfScalar(u8, outputPathOrFlag, '/') == null)
+                printErrExit(
+                    "output_path must starts with './' when doesn't containing '/'\ntry: './{s}'\n",
+                    .{outputPathOrFlag},
+                );
             config.outputPath = outputPathOrFlag;
             config.runner = .none;
             config.opt = .fast;
@@ -82,6 +88,7 @@ fn handleArg(config: *Config, arg: []const u8) void {
     if (handleTarget(config, arg)) return;
     if (handleOptimization(config, arg)) return;
     if (handleRunFlag(config, arg)) return;
+    if (handleExeArgs(config, arg)) return;
     handleHelpFlag(arg);
 
     // Unhandled arg
@@ -161,17 +168,35 @@ fn handleRunFlag(config: *Config, arg: []const u8) bool {
         , .{ config.target, consts.defaultTarget });
     }
 
-    if (std.mem.indexOfScalar(u8, arg, '=')) |pos| {
-        // TODO handle many args after --run or --args flag
-        const runArgs = arg[pos + 1 ..];
-        var list = StringList.initCapacity(tmp_alloc, 8) catch
-            printErrExit("out of memory when making run args ArrayList", .{});
-        list.append(tmp_alloc, runArgs) catch
-            printErrExit("out of memory when allocating run arg", .{});
-        config.runArgs = list;
-    }
+    var runArgs = StringList.initCapacity(tmp_alloc, 8) catch
+        printErrExit("out of memory when making run args ArrayList", .{});
+    runArgsAddRunner(&runArgs, config.runner);
+
+    // add exe
+    runArgs.append(tmp_alloc, config.outputPath) catch
+        printErrExit("out of memory when allocating run arg", .{});
+
+    config.runArgs = runArgs;
 
     return true;
+}
+
+fn runArgsAddRunner(runArgs: *StringList, runner: Runner) void {
+    switch (runner) {
+        .wine => runArgs.append(tmp_alloc, "wine") catch
+            printErrExit("out of memory when allocating run arg", .{}),
+        else => {},
+    }
+}
+
+fn handleExeArgs(config: *Config, arg: []const u8) bool {
+    if (config.runArgs) |*runArgs| {
+        runArgs.append(tmp_alloc, arg) catch
+            printErrExit("out of memory when allocating run arg", .{});
+        return true;
+    }
+
+    return false;
 }
 
 fn handleHelpFlag(arg: []const u8) void {
@@ -193,8 +218,8 @@ const usageStr =
     \\    windows-x86_64, windows-x86_64-gnu                Windows
     \\    browser                                           Wasm | HTML | JS | TS
     \\
-    \\  --run                                           Run compiled program. Use only when output_path is provided
-    \\  -h, --help                                      Show this help message
+    \\  --run                   Run compiled program. evry arg passed after --run will be pass into running exe
+    \\  -h, --help              Show this help message
     \\
     \\example usage:
     \\  rune src/main.zig --run="my arg"

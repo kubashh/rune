@@ -11,5 +11,5 @@ pub fn main(init: std.process.Init) void {
 
     compileProgram.compileProgram(init.io, &config);
 
-    runProgram.runProgram(init.io, config);
+    runProgram.runProgram(init.io, &config);
 }

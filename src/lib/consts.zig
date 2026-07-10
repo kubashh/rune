@@ -24,6 +24,9 @@ pub const Color = struct {
     pub const bright_magenta = "\x1b[95m";
     pub const bright_cyan = "\x1b[96m";
     pub const bright_white = "\x1b[97m";
+
+    pub const bold_on = "\x1b[1m";
+    pub const bold_off = "\x1b[0m";
 };
 
 pub const Extention = enum {
