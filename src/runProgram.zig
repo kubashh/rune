@@ -52,11 +52,11 @@ fn createCommandWine(exeArgs: *StringList, config: Config) void {
 fn printRunInfo(config: Config) void {
     if (config.runArgs) |runArgs| {
         std.log.info(
-            "running {s} with {s} with args: '{s}'\n",
-            .{ config.outputPath, getRunnerName(config.runner), runArgs.getLast() },
+            "running {s} {s} '{s}'\n",
+            .{ getRunnerName(config.runner), config.outputPath, runArgs.getLast() },
         );
     } else {
-        std.log.info("running {s} with {s}\n", .{ config.outputPath, getRunnerName(config.runner) });
+        std.log.info("running {s} {s}\n", .{ getRunnerName(config.runner), config.outputPath });
     }
 }
 

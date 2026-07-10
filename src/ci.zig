@@ -13,6 +13,7 @@ const printErrExit = util.printErrExit;
 const cliProgramExists = util.cliProgramExists;
 
 pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
+    _ = io;
     var buf: [1024]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
     const alloc = fba.allocator();
@@ -60,7 +61,7 @@ pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
 
     if (args.next()) |outputPathOrFlag| {
         if (outputPathOrFlag[0] == '-') {
-            handleArg(io, &config, outputPathOrFlag);
+            handleArg(&config, outputPathOrFlag);
         } else {
             if (outputPathOrFlag[outputPathOrFlag.len - 1] == '/')
                 printErrExit("output_path can't end with '/'\n", .{});
@@ -71,16 +72,16 @@ pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
     }
 
     while (args.next()) |arg| {
-        handleArg(io, &config, arg);
+        handleArg(&config, arg);
     }
 
     return config;
 }
 
-fn handleArg(io: std.Io, config: *Config, arg: []const u8) void {
+fn handleArg(config: *Config, arg: []const u8) void {
     if (handleTarget(config, arg)) return;
     if (handleOptimization(config, arg)) return;
-    if (handleRunFlag(io, config, arg)) return;
+    if (handleRunFlag(config, arg)) return;
     handleHelpFlag(arg);
 
     // Unhandled arg
@@ -143,17 +144,14 @@ fn handleOptimization(config: *Config, arg: []const u8) bool {
     return true;
 }
 
-fn handleRunFlag(io: std.Io, config: *Config, arg: []const u8) bool {
+fn handleRunFlag(config: *Config, arg: []const u8) bool {
     if (!std.mem.startsWith(u8, arg, "--run")) return false;
+
+    const isTargetWindows = config.target == .@"windows-x86_64" or config.target == .@"windows-x86_64-gnu";
 
     if (config.target == consts.defaultTarget) {
         config.runner = .native;
-    } else if ((builtin.target.os.tag == .linux or builtin.target.os.tag == .macos) and config.target == .@"windows-x86_64") {
-        if (!cliProgramExists(io, "clang")) printErrExit(
-            \\wine don't exists! to run windows bin's on posix wine is required!
-            \\install wine
-            \\
-        , .{});
+    } else if ((builtin.target.os.tag != .windows) and isTargetWindows) {
         config.runner = .wine;
     } else {
         std.log.warn(
@@ -199,7 +197,8 @@ const usageStr =
     \\  -h, --help                                      Show this help message
     \\
     \\example usage:
-    \\  rune src/main.zig
+    \\  rune src/main.zig --run="my arg"
+    \\  rune src/main.rs
     \\  rune src/main.c dist/main --fast
     \\  rune src/main.cpp dist/main --debug
     // \\  rune src/server.ts
@@ -207,7 +206,7 @@ const usageStr =
     // \\  rune src/index.html dist/index.html --size
     \\
     \\supported extentions:
-    \\  .zig, .c, .cpp
+    \\  .zig, .rs (native), .c, .cpp
     \\
 ;
 

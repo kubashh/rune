@@ -2,8 +2,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 const consts = @import("./consts.zig");
 
-const Color = consts.Color;
-
 pub const print = std.debug.print;
 
 pub fn printErrExit(comptime fmt: []const u8, options: anytype) noreturn {

@@ -1,13 +1,13 @@
 # rune
 
-Build & run tool for organizing codebase
+Build & run tool designed for simple and predictable development in any major programming lang.
 
 ## Cli design
 
 ### 1. Cli args
 
 ```txt
-usage: rune [input_path] [output_path | flag] [flags]
+usage (rune version): rune [input_path] [output_path | flag] [flags]
 flags:
   --debug | --safe | --fast | --size              Set optimization level (default: --debug, when output_path provided: --fast)
   --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
@@ -22,25 +22,15 @@ supported targets:
   -h, --help                                      Show this help message
 
 example usage:
-  rune src/main.zig
+  rune src/main.zig --run="my arg"
+  rune src/main.rs
   rune src/main.c dist/main --fast
+  rune src/main.cpp dist/main --debug
 
 supported extentions:
-  .zig, .c, .cpp
+  .zig, .rs (native), .c, .cpp
+
 ```
-
-<!-- ### 2. rune.json
-
-```json
-{
-  "scripts:": {
-    "default": "rune src/main.zig",
-    "build-linux": "rune src/main.zig --target=linux-x64 --fast",
-    "build-macos": "rune src/main.zig --macos --arm64 --x64",
-    "build-windows": "rune src/main.zig --windows --x64 --arm64 --x86"
-  }
-}
-``` -->
 
 ## Build code with rune
 
@@ -48,10 +38,12 @@ supported extentions:
 # Cross-platform build script using rune for building Zig, C
 # Targets:
 #   - Linux x64
+#   - Linux x64-musl
 #   - Linux ARM64
 #   - macOS ARM64 (Apple Silicon)
 #   - macOS x64 (Intel)
 #   - Windows x64
+#   - Windows x64-gnu
 
 rm -rf dist
 echo "building with different flags..."
@@ -102,31 +94,33 @@ echo "building with different flags..."
 
 ### Targets
 
-| Os-Arch-Abi        | Zig | Rust                      | C   | C++ | C#  | Java | Html | Css | JS/JSX/TS/TSX | Py  |
-| ------------------ | --- | ------------------------- | --- | --- | --- | ---- | ---- | --- | ------------- | --- |
-| linux-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| linux-x86_64-musl  | ✅  | ⚠️ (native, linux-x86_64) | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| linux-aarch64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| macos-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| macos-aarch64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| windows-x86_64     | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
-| windows-x86_64-gnu | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌   | ❌  | ❌            | ❌  |
+| Os-Arch-Abi        | Zig | Rust                      | C   | C++ | C#  | Java | Browser(Html/Css/JS/JSX/TS/TSX/Wasm) | Py  |
+| ------------------ | --- | ------------------------- | --- | --- | --- | ---- | ------------------------------------ | --- |
+| linux-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
+| linux-x86_64-musl  | ✅  | ⚠️ (native, linux-x86_64) | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
+| linux-aarch64      | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
+| macos-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
+| macos-aarch64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
+| windows-x86_64     | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
+| windows-x86_64-gnu | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
+| browser (wasm)     | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
 
 ### Code runners (Testing exe's)
 
-| target             | linux-x86_64 | linux-x86_64-musl | macos-x86_64  | macos-aarch64 | windows-x86_64 | windows-x86_64-gnu |
-| ------------------ | ------------ | ----------------- | ------------- | ------------- | -------------- | ------------------ |
-| linux-x86_64       | ✅           | ❌                | ❌            | ❌            | ❌             | ❌                 |
-| linux-x86_64-musl  | ❌           | ✅                | ❌            | ❌            | ❌             | ❌                 |
-| linux-aarch64      | ❌           | ❌                | ❌            | ❌            | ❌             | ❌                 |
-| macos-x86_64       | ❌           | ❌                | ✅            | ❌            | ❌             | ❌                 |
-| macos-aarch64      | ❌           | ❌                | ❌            | ✅            | ❌             | ❌                 |
-| windows-x86_64     | ✅ (wine)    | ⚠️ (wine - ?)     | ⚠️ (wine - ?) | ⚠️ (wine - ?) | ✅             | ❌                 |
-| windows-x86_64-gnu | ❌           | ❌                | ❌            | ❌            | ❌             | ✅                 |
+| target             | linux-x86_64 | linux-x86_64-musl | macos-x86_64 | macos-aarch64 | windows-x86_64 | windows-x86_64-gnu |
+| ------------------ | ------------ | ----------------- | ------------ | ------------- | -------------- | ------------------ |
+| linux-x86_64       | ✅           | ❌                | ❌           | ❌            | ❌             | ❌                 |
+| linux-x86_64-musl  | ❌           | ✅                | ❌           | ❌            | ❌             | ❌                 |
+| linux-aarch64      | ❌           | ❌                | ❌           | ❌            | ❌             | ❌                 |
+| macos-x86_64       | ❌           | ❌                | ✅           | ❌            | ❌             | ❌                 |
+| macos-aarch64      | ❌           | ❌                | ❌           | ✅            | ❌             | ❌                 |
+| windows-x86_64     | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ✅             | ❌                 |
+| windows-x86_64-gnu | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ❌             | ✅                 |
+| browser (wasm)     | ❌           | ❌                | ❌           | ❌            | ❌             | ❌                 |
 
 ## TODO
 
-- add support for: Rust (full), C#, Java, Html, Css, JS/JSX/TS/TSX, Python
+- add support for: Rust (full), C#, Java, Html, Css, JS/JSX/TS/TSX, Wasm, Python
 - rune.json
   - Parse config
   - Run scripts

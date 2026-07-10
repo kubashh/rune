@@ -2,14 +2,15 @@
 sh ./build_dev.sh
 
 # test runners
-./dist/test/rune example/main.zig dist/bin/runner-native --run="my args"
-./dist/test/rune example/main.zig dist/bin/runner-wine-windows-x64 --target=windows-x86_64 --run="my args"
+./dist/test/rune example/main.zig dist/bin/runner-native                                           --run="my args"
+./dist/test/rune example/main.zig dist/bin/runner-wine-windows-x64     --target=windows-x86_64     --run="my args"
+./dist/test/rune example/main.zig dist/bin/runner-wine-windows-x64-gnu --target=windows-x86_64-gnu --run="my args"
 
 # build with different optimalization flags
-./dist/test/rune example/main.zig dist/bin/app-zig-linux-x64-debug --debug
-./dist/test/rune example/main.zig dist/bin/app-zig-linux-x64-safe  --safe
-./dist/test/rune example/main.zig dist/bin/app-zig-linux-x64-size  --size
-./dist/test/rune example/main.zig dist/bin/app-zig-linux-x64-fast  --fast
+./dist/test/rune example/main.zig dist/bin/opt-zig-native-debug --debug
+./dist/test/rune example/main.zig dist/bin/opt-zig-native-safe  --safe
+./dist/test/rune example/main.zig dist/bin/opt-zig-native-size  --size
+./dist/test/rune example/main.zig dist/bin/opt-zig-native-fast  --fast
 
 # build Zig
 ./dist/test/rune example/main.zig dist/bin/app-zig-linux-x64      --target=linux-x86_64
@@ -27,6 +28,7 @@ sh ./build_dev.sh
 # ./dist/test/rune example/main.rs dist/bin/app-rs-macos-arm64    --target=macos-aarch64
 # ./dist/test/rune example/main.rs dist/bin/app-rs-macos-x64      --target=macos-x86_64
 # ./dist/test/rune example/main.rs dist/bin/app-rs-windows-x64    --target=windows-x86_64
+# ./dist/test/rune example/wasm.rs dist/bin/app-rs-browser.wasm   --target=browser
 
 # build C
 ./dist/test/rune example/main.c dist/bin/app-c-linux-x64      --target=linux-x86_64

@@ -3,11 +3,11 @@ const consts = @import("./lib/consts.zig");
 const util = @import("./lib/util.zig");
 
 const Config = consts.Config;
-const Color = consts.Color;
 
 const print = util.print;
 const printErrExit = util.printErrExit;
 const spawnSync = util.spawnSync;
+const cliProgramExists = util.cliProgramExists;
 const fileExistsCwd = util.fileExistsCwd;
 const createDirPathCwd = util.createDirPathCwd;
 const measurePrint = util.measurePrint;
@@ -17,6 +17,8 @@ pub fn compileProgram(io: std.Io, config: *Config) void {
     var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
     const alloc = fba.allocator();
     const outdir: ?[]const u8 = std.fs.path.dirname(config.outputPath);
+
+    checkAllPrograms(io, config);
 
     processInputExistense(io, config.inputPath);
 
@@ -49,6 +51,38 @@ pub fn compileProgram(io: std.Io, config: *Config) void {
         config.runner = .none;
 }
 
+fn checkAllPrograms(io: std.Io, config: *Config) void {
+    checkCompilerExistence(io, config);
+    checkRunnerExistence(io, config);
+}
+
+fn checkRunnerExistence(io: std.Io, config: *Config) void {
+    switch (config.runner) {
+        .wine => if (!cliProgramExists(io, "wine")) printErrExit(
+            \\wine don't exists! to run windows bin's on posix wine is required!
+            \\install wine
+            \\
+        , .{}),
+        .native, .none => {},
+    }
+}
+
+fn checkCompilerExistence(io: std.Io, config: *Config) void {
+    switch (config.extention) {
+        .zig, .c, .cpp => if (!cliProgramExists(io, "zig")) printErrExit(
+            \\zig don't exists! to compile zig, c, cpp zig is required!
+            \\install zig
+            \\
+        , .{}),
+        .rs => if (!cliProgramExists(io, "rustc")) printErrExit(
+            \\rustc don't exists! to compile rust rustc is required!
+            \\install rustc
+            \\
+        , .{}),
+        else => {},
+    }
+}
+
 fn processInputExistense(io: std.Io, inputPath: []const u8) void {
     if (!fileExistsCwd(io, inputPath)) {
         printErrExit(
@@ -62,16 +96,18 @@ fn processInputExistense(io: std.Io, inputPath: []const u8) void {
 
 fn createBuildCommandAlloc(alloc: std.mem.Allocator, config: *Config) error{OutOfMemory}![]const u8 {
     switch (config.extention) {
-        .zig => return try std.fmt.allocPrint(
-            alloc,
-            "zig build-exe {s} -femit-bin={s} -Doptimize={s} -target {s} --cache-dir .cache/zig",
-            .{
-                config.inputPath,
-                config.outputPath,
-                getOptimizeZig(config.opt),
-                getTargetZig(config.target),
-            },
-        ),
+        .zig => {
+            return try std.fmt.allocPrint(
+                alloc,
+                "zig build-exe {s} -femit-bin={s} -Doptimize={s} -target {s} --cache-dir .cache/zig",
+                .{
+                    config.inputPath,
+                    config.outputPath,
+                    getOptimizeZig(config.opt),
+                    getTargetZig(config.target),
+                },
+            );
+        },
         .rs => return try std.fmt.allocPrint(
             alloc,
             "rustc {s} -o {s} {s} --target {s}",
