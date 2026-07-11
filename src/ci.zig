@@ -9,12 +9,10 @@ const Extention = consts.Extention;
 const Runner = consts.Runner;
 const Config = consts.Config;
 
-const print = util.print;
 const printErrExit = util.printErrExit;
 const cliProgramExists = util.cliProgramExists;
 
-pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
-    _ = io;
+pub fn processArgs(argsObj: std.process.Args) Config {
     var buf: [1024]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
     const alloc = fba.allocator();
@@ -27,7 +25,6 @@ pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
     _ = args.skip();
 
     var inputPath: []const u8 = undefined;
-    var extention: Extention = .unknown;
 
     if (args.next()) |firstArg| {
         handleHelpFlag(firstArg);
@@ -40,7 +37,6 @@ pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
             , .{firstArg});
         }
         inputPath = firstArg;
-        extention = getExtention(firstArg);
     } else {
         // TODO handle rune.json
         printErrExit(
@@ -53,16 +49,18 @@ pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
     var config: Config = .{
         .inputPath = inputPath,
         .outputPath = ".cache/rune/tmp",
-        .extention = extention,
+        .extention = getExtention(inputPath),
         .opt = .debug,
         .target = consts.defaultTarget,
         .runner = .native,
         .runArgs = null,
     };
 
+    var argsLeft = argsObj.vector.len - 2;
+
     if (args.next()) |outputPathOrFlag| {
         if (outputPathOrFlag[0] == '-') {
-            handleArg(&config, outputPathOrFlag);
+            handleArg(&config, outputPathOrFlag, argsLeft);
         } else {
             if (outputPathOrFlag[outputPathOrFlag.len - 1] == '/')
                 printErrExit("output_path can't end with '/'\n", .{});
@@ -75,19 +73,20 @@ pub fn processArgs(io: std.Io, argsObj: std.process.Args) Config {
             config.runner = .none;
             config.opt = .fast;
         }
+        argsLeft -= 1;
     }
 
     while (args.next()) |arg| {
-        handleArg(&config, arg);
+        handleArg(&config, arg, argsLeft);
     }
 
     return config;
 }
 
-fn handleArg(config: *Config, arg: []const u8) void {
+fn handleArg(config: *Config, arg: []const u8, argsLeft: usize) void {
     if (handleTarget(config, arg)) return;
     if (handleOptimization(config, arg)) return;
-    if (handleRunFlag(config, arg)) return;
+    if (handleRunFlag(config, arg, argsLeft)) return;
     if (handleExeArgs(config, arg)) return;
     handleHelpFlag(arg);
 
@@ -103,32 +102,17 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
     if (!std.mem.startsWith(u8, arg, "--target")) return false;
 
     if (std.mem.indexOfScalar(u8, arg, '=')) |pos| {
-        const target = arg[pos + 1 ..];
+        const targetStr = arg[pos + 1 ..];
 
-        if (std.mem.eql(u8, target, "linux-x86_64")) {
-            config.target = .@"linux-x86_64";
-        } else if (std.mem.eql(u8, target, "linux-x86_64-musl")) {
-            config.target = .@"linux-x86_64-musl";
-        } else if (std.mem.eql(u8, target, "linux-aarch64")) {
-            config.target = .@"linux-aarch64";
-        } else if (std.mem.eql(u8, target, "macos-x86_64")) {
-            config.target = .@"macos-x86_64";
-        } else if (std.mem.eql(u8, target, "macos-aarch64")) {
-            config.target = .@"macos-aarch64";
-        } else if (std.mem.eql(u8, target, "windows-x86_64")) {
-            config.target = .@"windows-x86_64";
-        } else if (std.mem.eql(u8, target, "windows-x86_64-gnu")) {
-            config.target = .@"windows-x86_64-gnu";
-        } else if (std.mem.eql(u8, target, "browser")) {
-            config.target = .browser;
-        } else {
+        if (getTarget(targetStr)) |target|
+            config.target = target
+        else
             printErrExit(
                 \\bad target '{s}'!
                 \\try: --target=[target]
                 \\run 'rune --help' to see supported targets
                 \\
-            , .{target});
-        }
+            , .{targetStr});
     } else {
         printErrExit("bad --target flag! try: --target=[target]\n", .{});
     }
@@ -136,23 +120,38 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
     return true;
 }
 
-fn handleOptimization(config: *Config, arg: []const u8) bool {
-    if (std.mem.eql(u8, arg, "--debug")) {
-        config.opt = .debug;
-    } else if (std.mem.eql(u8, arg, "--safe")) {
-        config.opt = .safe;
-    } else if (std.mem.eql(u8, arg, "--fast")) {
-        config.opt = .fast;
-    } else if (std.mem.eql(u8, arg, "--size")) {
-        config.opt = .size;
-    } else {
-        return false;
-    }
-    return true;
+fn getTarget(target: []const u8) ?consts.Target {
+    if (std.mem.eql(u8, target, "linux-x86_64")) return .@"linux-x86_64";
+    if (std.mem.eql(u8, target, "linux-x86_64-musl")) return .@"linux-x86_64-musl";
+    if (std.mem.eql(u8, target, "linux-aarch64")) return .@"linux-aarch64";
+    if (std.mem.eql(u8, target, "macos-x86_64")) return .@"macos-x86_64";
+    if (std.mem.eql(u8, target, "macos-aarch64")) return .@"macos-aarch64";
+    if (std.mem.eql(u8, target, "windows-x86_64")) return .@"windows-x86_64";
+    if (std.mem.eql(u8, target, "windows-x86_64-gnu")) return .@"windows-x86_64-gnu";
+    if (std.mem.eql(u8, target, "browser")) return .browser;
+    return null;
 }
 
-fn handleRunFlag(config: *Config, arg: []const u8) bool {
+fn handleOptimization(config: *Config, arg: []const u8) bool {
+    if (getOptimization(arg)) |optimization| {
+        config.opt = optimization;
+        return true;
+    }
+    return false;
+}
+
+fn getOptimization(arg: []const u8) ?consts.Optimization {
+    if (std.mem.eql(u8, arg, "--debug")) return .debug;
+    if (std.mem.eql(u8, arg, "--safe")) return .safe;
+    if (std.mem.eql(u8, arg, "--fast")) return .fast;
+    if (std.mem.eql(u8, arg, "--size")) return .size;
+    return null;
+}
+
+fn handleRunFlag(config: *Config, arg: []const u8, argsLeft: usize) bool {
     if (!std.mem.startsWith(u8, arg, "--run")) return false;
+
+    var arrayLen = argsLeft;
 
     const isTargetWindows = config.target == .@"windows-x86_64" or config.target == .@"windows-x86_64-gnu";
 
@@ -160,6 +159,7 @@ fn handleRunFlag(config: *Config, arg: []const u8) bool {
         config.runner = .native;
     } else if ((builtin.target.os.tag != .windows) and isTargetWindows) {
         config.runner = .wine;
+        arrayLen += 1;
     } else {
         std.log.warn(
             \\--run flag unsupported for target: {} on {}
@@ -168,7 +168,7 @@ fn handleRunFlag(config: *Config, arg: []const u8) bool {
         , .{ config.target, consts.defaultTarget });
     }
 
-    var runArgs = StringList.initCapacity(tmp_alloc, 8) catch
+    var runArgs = StringList.initCapacity(tmp_alloc, arrayLen) catch
         printErrExit("out of memory when making run args ArrayList", .{});
     runArgsAddRunner(&runArgs, config.runner);
 
@@ -185,7 +185,7 @@ fn runArgsAddRunner(runArgs: *StringList, runner: Runner) void {
     switch (runner) {
         .wine => runArgs.append(tmp_alloc, "wine") catch
             printErrExit("out of memory when allocating run arg", .{}),
-        else => {},
+        .native, .none => {},
     }
 }
 
@@ -236,7 +236,7 @@ const usageStr =
 ;
 
 fn printUsage() void {
-    print(usageStr, .{comptime consts.runeVersion});
+    std.debug.print(usageStr, .{comptime consts.runeVersion});
 }
 
 fn getExtention(path: []const u8) Extention {
@@ -253,5 +253,9 @@ fn getExtention(path: []const u8) Extention {
     if (std.mem.endsWith(u8, path, ".ts")) return .ts;
     if (std.mem.endsWith(u8, path, ".tsx")) return .tsx;
     if (std.mem.endsWith(u8, path, ".py")) return .py;
-    return .unknown;
+    printErrExit(
+        \\unknown extetnion for file '{s}'
+        \\see supported file extentions running 'run -h'
+        \\
+    , .{path});
 }

@@ -4,13 +4,10 @@ const util = @import("./lib/util.zig");
 
 const Config = consts.Config;
 
-const print = util.print;
 const printErrExit = util.printErrExit;
 const spawnSync = util.spawnSync;
 const cliProgramExists = util.cliProgramExists;
 const fileExistsCwd = util.fileExistsCwd;
-const createDirPathCwd = util.createDirPathCwd;
-const measurePrint = util.measurePrint;
 
 pub fn compileProgram(io: std.Io, config: *Config) void {
     var buf: [512]u8 = undefined;
@@ -27,13 +24,15 @@ pub fn compileProgram(io: std.Io, config: *Config) void {
     defer alloc.free(buildCommand);
 
     std.log.info("build command: {s}\n", .{buildCommand});
-    if (outdir) |validOutdir|
-        createDirPathCwd(io, validOutdir) catch |err|
+    if (outdir) |validOutdir| {
+        const cwd = std.Io.Dir.cwd();
+        cwd.createDirPath(io, validOutdir) catch |err|
             std.log.warn(
                 \\can't create dir for output. err: {}
                 \\App still running but may break any time!
                 \\
             , .{err});
+    }
 
     // Real compilation
     const term = spawnSync(io, .{
@@ -168,11 +167,6 @@ fn createBuildCommandAlloc(alloc: std.mem.Allocator, config: *Config) error{OutO
             \\see supported file extentions running 'run -h'
             \\
         , .{}),
-        else => printErrExit(
-            \\unknown file extetnion: {}
-            \\see supported file extentions running 'run -h'
-            \\
-        , .{config.extention}),
     }
 }
 

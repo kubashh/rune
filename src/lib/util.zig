@@ -2,7 +2,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const consts = @import("./consts.zig");
 
-pub const print = std.debug.print;
+const Color = consts.Color;
 
 pub fn printErrExit(comptime fmt: []const u8, options: anytype) noreturn {
     std.log.err(fmt, options);
@@ -60,32 +60,27 @@ pub fn fileExistsCwd(io: std.Io, path: []const u8) bool {
     return true;
 }
 
-pub const CreateDirPathCwdError = std.Io.Dir.CreateDirPathError;
-
-pub fn createDirPathCwd(io: std.Io, path: []const u8) CreateDirPathCwdError!void {
-    const cwd = std.Io.Dir.cwd();
-    try cwd.createDirPath(io, path);
-}
-
-pub inline fn measureStart(io: std.Io) i96 {
-    return std.Io.Clock.Timestamp.now(io, .awake).raw.nanoseconds;
-}
-
-pub inline fn measurePrint(io: std.Io, start: i96, label: []const u8) void {
-    const end = std.Io.Clock.Timestamp.now(io, .awake).raw.nanoseconds;
-    const nanos = end - start;
-    switch (nanos) {
-        0...999 => {
-            std.debug.print("{s}: {} ns\n", .{ label, nanos });
-        },
-        1_000...999_999 => {
-            std.debug.print("{s}: {d:.3} us\n", .{ label, @as(f64, @floatFromInt(nanos)) / 1_000.0 });
-        },
-        1_000_000...999_999_999 => {
-            std.debug.print("{s}: {d:.3} ms\n", .{ label, @as(f64, @floatFromInt(nanos)) / 1_000_000.0 });
-        },
-        else => {
-            std.debug.print("{s}: {d:.3} s\n", .{ label, @as(f64, @floatFromInt(nanos)) / 1_000_000_000.0 });
-        },
+pub const Measure = struct {
+    pub inline fn start(io: std.Io) i96 {
+        return std.Io.Clock.Timestamp.now(io, .awake).raw.nanoseconds;
     }
-}
+
+    pub inline fn print(io: std.Io, start_ns: i96, label: []const u8) void {
+        const end = std.Io.Clock.Timestamp.now(io, .awake).raw.nanoseconds;
+        const nanos = end - start_ns;
+        switch (nanos) {
+            0...999 => {
+                std.debug.print("{s}: {} ns\n", .{ label, nanos });
+            },
+            1_000...999_999 => {
+                std.debug.print("{s}: {d:.3} us\n", .{ label, @as(f64, @floatFromInt(nanos)) / 1_000.0 });
+            },
+            1_000_000...999_999_999 => {
+                std.debug.print("{s}: {d:.3} ms\n", .{ label, @as(f64, @floatFromInt(nanos)) / 1_000_000.0 });
+            },
+            else => {
+                std.debug.print("{s}: {d:.3} s\n", .{ label, @as(f64, @floatFromInt(nanos)) / 1_000_000_000.0 });
+            },
+        }
+    }
+};

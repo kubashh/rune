@@ -7,9 +7,12 @@ const runProgram = @import("./runProgram.zig");
 const Config = consts.Config;
 
 pub fn main(init: std.process.Init) void {
-    var config: Config = ci.processArgs(init.io, init.minimal.args);
+    var config: Config = ci.processArgs(init.minimal.args);
 
     compileProgram.compileProgram(init.io, &config);
 
-    runProgram.runProgram(init.io, &config);
+    if (config.runArgs) |*runArgs| {
+        runProgram.runProgram(init.io, runArgs.items);
+        runArgs.deinit(consts.tmp_alloc);
+    }
 }

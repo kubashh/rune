@@ -43,7 +43,6 @@ pub const Extention = enum {
     ts,
     tsx,
     py,
-    unknown,
 };
 pub const Optimization = enum {
     debug,
@@ -118,5 +117,5 @@ pub const Config = struct {
     target: Target,
     opt: Optimization,
     runner: Runner,
-    runArgs: ?std.ArrayList([]const u8),
+    runArgs: ?StringList,
 };

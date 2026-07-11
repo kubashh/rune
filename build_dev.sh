@@ -1,4 +1,4 @@
-# usage: sh build_dev.sh && ./dist/test/rune example/main.c dist/bin/main --run="my args"
+# usage: sh build_dev.sh && ./dist/test/rune example/main.c dist/bin/main --run "space arg" arg2
 # after 0.1.0 consider using rune for building
 # IMPORTANT: this script build DEBUG release, do not build release with it!!!
 clear

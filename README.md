@@ -127,3 +127,7 @@ echo "building with different flags..."
   - Dev mode
   - Release mode
 - build target windows: create .pdb file only when opt == .debug
+- add support for development on android
+- add support for zig cInclude (-lc)
+- add support for compiler custom flags
+- add --info flag for printing info
