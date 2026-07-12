@@ -55,7 +55,7 @@ pub const Config = struct {
 
 pub const tmp_alloc = std.heap.page_allocator;
 
-pub const runeVersion = "0.1.0";
+pub const runeVersion = "0.2.0-dev";
 
 //  OsTags
 //      1.  linux, macos, windows

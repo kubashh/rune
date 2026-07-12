@@ -1,10 +1,10 @@
 # run this script before commit, it will tests building all possible targets
-sh ./build_dev.sh
+rune src/main.zig dist/test/rune --debug
 
 # test runners
-./dist/test/rune example/main.zig dist/bin/runner-native                                           --run="my args"
-./dist/test/rune example/main.zig dist/bin/runner-wine-windows-x64     --target=windows-x86_64     --run="my args"
-./dist/test/rune example/main.zig dist/bin/runner-wine-windows-x64-gnu --target=windows-x86_64-gnu --run="my args"
+./dist/test/rune example/main.zig dist/bin/runner-native                                           --run
+./dist/test/rune example/main.zig dist/bin/runner-wine-windows-x64     --target=windows-x86_64     --run "one arg"
+./dist/test/rune example/main.zig dist/bin/runner-wine-windows-x64-gnu --target=windows-x86_64-gnu --run --flag 'str arg'
 
 # build with different optimalization flags
 ./dist/test/rune example/main.zig dist/bin/opt-zig-native-debug --debug

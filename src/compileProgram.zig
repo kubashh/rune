@@ -104,32 +104,32 @@ fn createBuildCommandAlloc(alloc: std.mem.Allocator, config: *Config) error{OutO
         ),
         .cs => printErrExit(
             \\C# not supported yet (in development)!
-            \\see supported file extentions running 'run -h'
+            \\see supported file extentions running 'rune -h'
             \\
         , .{}),
         .java => printErrExit(
             \\java not supported yet (in development)!
-            \\see supported file extentions running 'run -h'
+            \\see supported file extentions running 'rune -h'
             \\
         , .{}),
         .html => printErrExit(
             \\html not supported yet (in development)!
-            \\see supported file extentions running 'run -h'
+            \\see supported file extentions running 'rune -h'
             \\
         , .{}),
         .css => printErrExit(
             \\css not supported yet (in development)!
-            \\see supported file extentions running 'run -h'
+            \\see supported file extentions running 'rune -h'
             \\
         , .{}),
         .js, .jsx, .ts, .tsx => printErrExit(
             \\js/jsx/ts/tsx not supported yet (in development)!
-            \\see supported file extentions running 'run -h'
+            \\see supported file extentions running 'rune -h'
             \\
         , .{}),
         .py => printErrExit(
             \\python not supported yet (in development)!
-            \\see supported file extentions running 'run -h'
+            \\see supported file extentions running 'rune -h'
             \\
         , .{}),
     }

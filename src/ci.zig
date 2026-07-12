@@ -275,7 +275,7 @@ fn getExtention(path: []const u8) Extention {
     if (std.mem.endsWith(u8, path, ".py")) return .py;
     printErrExit(
         \\unknown extetnion for file '{s}'
-        \\see supported file extentions running 'run -h'
+        \\see supported file extentions running 'rune -h'
         \\
     , .{path});
 }
