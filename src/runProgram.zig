@@ -9,15 +9,13 @@ const SpawnSyncError = util.SpawnSyncError;
 const spawnSyncInherit = util.spawnSyncInherit;
 
 pub fn runProgram(io: std.Io, runArgsItems: []const []const u8) void {
-    printRunInfo(runArgsItems);
-
     _ = spawnSyncInherit(io, runArgsItems) catch |err|
         printRunErrExit(runArgsItems, err);
 }
 
 // for now is fast enought but in future consider make one buffer and print it ones.
 // make struct PrintBuffer: init(buf_len), add(str), print()
-fn printRunInfo(runArgsItems: []const []const u8) void {
+pub fn printRunInfo(runArgsItems: []const []const u8) void {
     std.debug.print(
         Color.green ++ Color.bold_on ++ "info" ++ Color.bright_black ++ ":" ++ Color.reset ++ " running",
         .{},

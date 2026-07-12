@@ -6,7 +6,6 @@ const Config = consts.Config;
 
 const printErrExit = util.printErrExit;
 const spawnSync = util.spawnSync;
-const cliProgramExists = util.cliProgramExists;
 const fileExistsCwd = util.fileExistsCwd;
 
 pub fn compileProgram(io: std.Io, config: *Config) void {
@@ -15,15 +14,13 @@ pub fn compileProgram(io: std.Io, config: *Config) void {
     const alloc = fba.allocator();
     const outdir: ?[]const u8 = std.fs.path.dirname(config.outputPath);
 
-    checkAllPrograms(io, config);
-
     processInputExistense(io, config.inputPath);
 
     const buildCommand: []const u8 = createBuildCommandAlloc(alloc, config) catch
         printErrExit("out of memory while allocating build command!\n", .{});
     defer alloc.free(buildCommand);
 
-    std.log.info("build command: {s}\n", .{buildCommand});
+    if (config.info) std.log.info("build command: {s}\n", .{buildCommand});
     if (outdir) |validOutdir| {
         const cwd = std.Io.Dir.cwd();
         cwd.createDirPath(io, validOutdir) catch |err|
@@ -47,39 +44,7 @@ pub fn compileProgram(io: std.Io, config: *Config) void {
         );
 
     if (term != 0)
-        config.runner = .none;
-}
-
-fn checkAllPrograms(io: std.Io, config: *Config) void {
-    checkCompilerExistence(io, config);
-    checkRunnerExistence(io, config);
-}
-
-fn checkRunnerExistence(io: std.Io, config: *Config) void {
-    switch (config.runner) {
-        .wine => if (!cliProgramExists(io, "wine")) printErrExit(
-            \\wine don't exists! to run windows bin's on posix wine is required!
-            \\install wine
-            \\
-        , .{}),
-        .native, .none => {},
-    }
-}
-
-fn checkCompilerExistence(io: std.Io, config: *Config) void {
-    switch (config.extention) {
-        .zig, .c, .cpp => if (!cliProgramExists(io, "zig")) printErrExit(
-            \\zig don't exists! to compile zig, c, cpp zig is required!
-            \\install zig
-            \\
-        , .{}),
-        .rs => if (!cliProgramExists(io, "rustc")) printErrExit(
-            \\rustc don't exists! to compile rust rustc is required!
-            \\install rustc
-            \\
-        , .{}),
-        else => {},
-    }
+        std.process.exit(term);
 }
 
 fn processInputExistense(io: std.Io, inputPath: []const u8) void {

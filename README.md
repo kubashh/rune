@@ -19,6 +19,7 @@ supported targets:
     browser                                           Wasm | HTML | JS | TS
 
   --run                   Run compiled program. evry arg passed after --run will be pass into running exe
+  --info                  Print build/run info (useful for debugging)
   -h, --help              Show this help message
 
 example usage:
@@ -131,3 +132,4 @@ echo "building with different flags..."
 - add support for zig cInclude (-lc)
 - add support for compiler custom flags
 - add --info flag for printing info
+- make sth like ArgParser as wrapper for args parsing

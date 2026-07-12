@@ -7,6 +7,7 @@ const tmp_alloc = consts.tmp_alloc;
 const StringList = consts.StringList;
 const Extention = consts.Extention;
 const Runner = consts.Runner;
+const Target = consts.Target;
 const Config = consts.Config;
 
 const printErrExit = util.printErrExit;
@@ -46,14 +47,18 @@ pub fn processArgs(argsObj: std.process.Args) Config {
         , .{});
     }
 
+    const extention = getExtention(inputPath);
+
     var config: Config = .{
         .inputPath = inputPath,
         .outputPath = ".cache/rune/tmp",
-        .extention = getExtention(inputPath),
+        .extention = extention,
         .opt = .debug,
-        .target = consts.defaultTarget,
+        .target = getDefaultTarget(extention),
         .runner = .native,
         .runArgs = null,
+        .types = false,
+        .info = false,
     };
 
     var argsLeft = argsObj.vector.len - 2;
@@ -83,11 +88,19 @@ pub fn processArgs(argsObj: std.process.Args) Config {
     return config;
 }
 
+fn getDefaultTarget(extention: Extention) Target {
+    return switch (extention) {
+        .html, .css, .js, .jsx, .ts, .tsx => .browser,
+        else => consts.defaultTarget,
+    };
+}
+
 fn handleArg(config: *Config, arg: []const u8, argsLeft: usize) void {
     if (handleTarget(config, arg)) return;
     if (handleOptimization(config, arg)) return;
     if (handleRunFlag(config, arg, argsLeft)) return;
     if (handleExeArgs(config, arg)) return;
+    if (handleInfoFlag(config, arg)) return;
     handleHelpFlag(arg);
 
     // Unhandled arg
@@ -120,7 +133,7 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
     return true;
 }
 
-fn getTarget(target: []const u8) ?consts.Target {
+fn getTarget(target: []const u8) ?Target {
     if (std.mem.eql(u8, target, "linux-x86_64")) return .@"linux-x86_64";
     if (std.mem.eql(u8, target, "linux-x86_64-musl")) return .@"linux-x86_64-musl";
     if (std.mem.eql(u8, target, "linux-aarch64")) return .@"linux-aarch64";
@@ -181,6 +194,12 @@ fn handleRunFlag(config: *Config, arg: []const u8, argsLeft: usize) bool {
     return true;
 }
 
+fn handleInfoFlag(config: *Config, arg: []const u8) bool {
+    if (!std.mem.startsWith(u8, arg, "--info")) return false;
+    config.info = true;
+    return true;
+}
+
 fn runArgsAddRunner(runArgs: *StringList, runner: Runner) void {
     switch (runner) {
         .wine => runArgs.append(tmp_alloc, "wine") catch
@@ -219,6 +238,7 @@ const usageStr =
     \\    browser                                           Wasm | HTML | JS | TS
     \\
     \\  --run                   Run compiled program. evry arg passed after --run will be pass into running exe
+    \\  --info                  Print build/run info (useful for debugging)
     \\  -h, --help              Show this help message
     \\
     \\example usage:
