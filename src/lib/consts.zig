@@ -9,11 +9,11 @@ pub const Target = enum {
     @"linux-x86_64",
     @"linux-x86_64-musl",
     @"linux-aarch64",
-    // @"linux-aarch64-musl", TODO implement
+    @"linux-aarch64-musl",
     @"macos-aarch64", // macOS ARM64 (Apple Silicon)
     @"macos-x86_64", // (Intel)
     @"windows-x86_64",
-    // @"windows-aarch64", TODO implement
+    @"windows-aarch64",
     browser, // wasm / html / css / js / ts
     // and runtime?
 };
@@ -54,8 +54,6 @@ pub const Config = struct {
 };
 
 // values
-
-pub const tmp_alloc = std.heap.page_allocator;
 
 pub const runeVersion = "0.2.0-dev";
 

@@ -13,9 +13,9 @@ flags:
   --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
 
 supported targets:
-    linux-x86_64, linux-x86_64-musl, linux-aarch64    Linux
-    macos-x86_64, macos-aarch64                       Darwin
-    windows-x86_64                                    Windows
+    linux-x86_64, linux-x86_64-musl, linux-aarch64, linux-aarch64-musl    Linux
+    macos-x86_64, macos-aarch64                                           Darwin
+    windows-x86_64, windows-aarch64                                       Windows
     browser                                           Wasm | HTML | CSS | JS | TS
 
   --run                   Run compiled program. evry arg passed after --run will be pass into running exe
@@ -39,74 +39,76 @@ supported extentions:
 ## Build code with rune
 
 ```sh
-# Cross-platform build script using rune for building Zig, C
-# Targets:
-#   - Linux x64
-#   - Linux x64-musl
-#   - Linux ARM64
-#   - macOS ARM64 (Apple Silicon)
-#   - macOS x64 (Intel)
-#   - Windows x64
-#   - Windows x64-gnu
-
 rm -rf dist
 echo "building with different flags..."
+# test runners
+rune example/main.zig
+rune example/main.zig --target=windows-x86_64 --run "one arg"
 
 # build with different optimalization flags
-./dist/bin/rune example/main.zig dist/bin/app-zig-linux-x64-debug --debug
-./dist/bin/rune example/main.zig dist/bin/app-zig-linux-x64-safe  --safe
-./dist/bin/rune example/main.zig dist/bin/app-zig-linux-x64-size  --size
-./dist/bin/rune example/main.zig dist/bin/app-zig-linux-x64-fast  --fast
+rune example/main.zig dist/opt/zig-native-debug --debug
+rune example/main.zig dist/opt/zig-native-safe  --safe
+rune example/main.zig dist/opt/zig-native-size  --size
+rune example/main.zig dist/opt/zig-native-fast  --fast
 
 # build Zig
-./dist/bin/rune example/main.zig dist/bin/app-zig-linux-x64      --target=linux-x86_64
-./dist/bin/rune example/main.zig dist/bin/app-zig-linux-x64-musl --target=linux-x86_64-musl
-./dist/bin/rune example/main.zig dist/bin/app-zig-linux-arm64    --target=linux-aarch64
-./dist/bin/rune example/main.zig dist/bin/app-zig-macos-arm64    --target=macos-aarch64
-./dist/bin/rune example/main.zig dist/bin/app-zig-macos-x64      --target=macos-x86_64
-./dist/bin/rune example/main.zig dist/bin/app-zig-windows-x64    --target=windows-x86_64
-./dist/bin/rune example/wasm.zig dist/bin/app-zig-browser.wasm   --target=browser
+rune example/main.zig dist/zig/app-linux-x86_64       --target=linux-x86_64
+rune example/main.zig dist/zig/app-linux-x86_64-musl  --target=linux-x86_64-musl
+rune example/main.zig dist/zig/app-linux-aarch64      --target=linux-aarch64
+rune example/main.zig dist/zig/app-linux-aarch64-musl --target=linux-aarch64-musl
+rune example/main.zig dist/zig/app-macos-aarch64      --target=macos-aarch64
+rune example/main.zig dist/zig/app-macos-x86_64       --target=macos-x86_64
+rune example/main.zig dist/zig/app-windows-x86_64     --target=windows-x86_64
+rune example/main.zig dist/zig/app-windows-aarch64    --target=windows-aarch64
+rune example/wasm.zig dist/zig/app-browser.wasm       --target=browser
 
 # build Rust
-./dist/bin/rune example/main.rs dist/bin/app-rs-linux-x64      --target=linux-x86_64
-./dist/bin/rune example/main.rs dist/bin/app-rs-linux-x64-musl --target=linux-x86_64-musl
-# ./dist/bin/rune example/main.rs dist/bin/app-rs-linux-arm64    --target=linux-aarch64
-# ./dist/bin/rune example/main.rs dist/bin/app-rs-macos-arm64    --target=macos-aarch64
-# ./dist/bin/rune example/main.rs dist/bin/app-rs-macos-x64      --target=macos-x86_64
-# ./dist/bin/rune example/main.rs dist/bin/app-rs-windows-x64    --target=windows-x86_64
+rune example/main.rs dist/rs/app-linux-x86_64       --target=linux-x86_64
+rune example/main.rs dist/rs/app-linux-x86_64-musl  --target=linux-x86_64-musl
+# rune example/main.rs dist/rs/app-linux-aarch64      --target=linux-aarch64
+# rune example/main.rs dist/rs/app-linux-aarch64-musl --target=linux-aarch64-musl
+# rune example/main.rs dist/rs/app-macos-aarch64      --target=macos-aarch64
+# rune example/main.rs dist/rs/app-macos-x86_64       --target=macos-x86_64
+# rune example/main.rs dist/rs/app-windows-x86_64     --target=windows-x86_64
+# rune example/main.rs dist/rs/app-windows-aarch64    --target=windows-aarch64
+# rune example/wasm.rs dist/rs/app-browser.wasm        --target=browser
 
 # build C
-./dist/bin/rune example/main.c dist/bin/app-c-linux-x64      --target=linux-x86_64
-./dist/bin/rune example/main.c dist/bin/app-c-linux-x64-musl --target=linux-x86_64-musl
-./dist/bin/rune example/main.c dist/bin/app-c-linux-arm64    --target=linux-aarch64
-./dist/bin/rune example/main.c dist/bin/app-c-macos-arm64    --target=macos-aarch64
-./dist/bin/rune example/main.c dist/bin/app-c-macos-x64      --target=macos-x86_64
-./dist/bin/rune example/main.c dist/bin/app-c-windows-x64    --target=windows-x86_64
-./dist/bin/rune example/wasm.c dist/bin/app-c-browser.wasm   --target=browser
+rune example/main.c dist/c/app-linux-x86_64      --target=linux-x86_64
+rune example/main.c dist/c/app-linux-x86_64-musl --target=linux-x86_64-musl
+rune example/main.c dist/c/app-linux-aarch64     --target=linux-aarch64
+rune example/main.c dist/c/app-linux-aarch64     --target=linux-aarch64
+rune example/main.c dist/c/app-macos-aarch64     --target=macos-aarch64
+rune example/main.c dist/c/app-macos-x86_64      --target=macos-x86_64
+rune example/main.c dist/c/app-windows-x86_64    --target=windows-x86_64
+rune example/main.c dist/c/app-windows-aarch64   --target=windows-aarch64
+rune example/wasm.c dist/c/app-browser.wasm      --target=browser
 
 # build C++
-./dist/bin/rune example/main.cpp dist/bin/app-cpp-linux-x64      --target=linux-x86_64
-./dist/bin/rune example/main.cpp dist/bin/app-cpp-linux-x64-musl --target=linux-x86_64-musl
-./dist/bin/rune example/main.cpp dist/bin/app-cpp-linux-arm64    --target=linux-aarch64
-./dist/bin/rune example/main.cpp dist/bin/app-cpp-macos-arm64    --target=macos-aarch64
-./dist/bin/rune example/main.cpp dist/bin/app-cpp-macos-x64      --target=macos-x86_64
-./dist/bin/rune example/main.cpp dist/bin/app-cpp-windows-x64    --target=windows-x86_64
-./dist/bin/rune example/wasm.cpp dist/bin/app-cpp-browser.wasm   --target=browser
+rune example/main.cpp dist/cpp/app-linux-x86_64       --target=linux-x86_64
+rune example/main.cpp dist/cpp/app-linux-x86_64-musl  --target=linux-x86_64-musl
+rune example/main.cpp dist/cpp/app-linux-aarch64      --target=linux-aarch64
+rune example/main.cpp dist/cpp/app-linux-aarch64-musl --target=linux-aarch64-musl
+rune example/main.cpp dist/cpp/app-macos-aarch64      --target=macos-aarch64
+rune example/main.cpp dist/cpp/app-macos-x86_64       --target=macos-x86_64
+rune example/main.cpp dist/cpp/app-windows-x86_64     --target=windows-x86_64
+rune example/main.cpp dist/cpp/app-windows-aarch64    --target=windows-aarch64
+rune example/wasm.cpp dist/cpp/app-browser.wasm       --target=browser
 
 # build HTML/CSS
-./dist/test/rune example/index.html dist/bin/browser-index.html
-./dist/test/rune example/styles.css dist/bin/browser-styles.css
+rune example/index.html dist/browser/index.html
+rune example/styles.css dist/browser/new-styles.css
+rune example/script.js dist/browser/new-script.js
 
 # build JS/JSX/TS/TSX
-./dist/test/rune example/main.js dist/bin/app-js-linux-x64      --target=linux-x86_64
-./dist/test/rune example/main.js dist/bin/app-js-linux-x64-musl --target=linux-x86_64-musl
-./dist/test/rune example/main.js dist/bin/app-js-linux-arm64    --target=linux-aarch64
-./dist/test/rune example/main.ts dist/bin/app-ts-macos-arm64    --target=macos-aarch64
-./dist/test/rune example/main.ts dist/bin/app-ts-macos-x64      --target=macos-x86_64
-./dist/test/rune example/main.ts dist/bin/app-ts-windows-x64    --target=windows-x86_64
-./dist/test/rune example/script.js dist/bin/browser-script.js
-# ./dist/test/rune example/wasm.js dist/bin/app-jsx-browser.jsx   --target=browser # jsx need node_modules jsx specification
-# ./dist/test/rune example/wasm.js dist/bin/app-tsx-browser.tsx   --target=browser
+rune example/main.js dist/js/app-linux-x86_64       --target=linux-x86_64
+rune example/main.js dist/js/app-linux-x86_64-musl  --target=linux-x86_64-musl
+rune example/main.js dist/js/app-linux-aarch64      --target=linux-aarch64
+rune example/main.js dist/js/app-linux-aarch64-musl --target=linux-aarch64-musl
+rune example/main.ts dist/ts/app-macos-aarch64      --target=macos-aarch64
+rune example/main.ts dist/ts/app-macos-x86_64       --target=macos-x86_64
+rune example/main.ts dist/ts/app-windows-x86_64     --target=windows-x86_64
+rune example/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
 ```
 
 ## Suppoted
@@ -125,19 +127,22 @@ echo "building with different flags..."
 
 ### Code runners (Testing exe's)
 
-| target            | linux-x86_64 | linux-x86_64-musl | macos-x86_64 | macos-aarch64 | windows-x86_64 |
-| ----------------- | ------------ | ----------------- | ------------ | ------------- | -------------- |
-| linux-x86_64      | ✅           | ❌                | ❌           | ❌            | ❌             |
-| linux-x86_64-musl | ❌           | ✅                | ❌           | ❌            | ❌             |
-| linux-aarch64     | ❌           | ❌                | ❌           | ❌            | ❌             |
-| macos-x86_64      | ❌           | ❌                | ✅           | ❌            | ❌             |
-| macos-aarch64     | ❌           | ❌                | ❌           | ✅            | ❌             |
-| windows-x86_64    | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ✅             |
-| browser (wasm)    | ❌           | ❌                | ❌           | ❌            | ❌             |
+| target                   | linux-x86_64 | linux-x86_64-musl | macos-x86_64 | macos-aarch64 | windows-x86_64 |
+| ------------------------ | ------------ | ----------------- | ------------ | ------------- | -------------- |
+| linux-x86_64             | ✅           | ❌                | ❌           | ❌            | ❌             |
+| linux-x86_64-musl        | ❌           | ✅                | ❌           | ❌            | ❌             |
+| linux-aarch64            | ❌           | ❌                | ❌           | ❌            | ❌             |
+| linux-aarch64-musl       | ❌           | ❌                | ❌           | ❌            | ❌             |
+| macos-x86_64             | ❌           | ❌                | ✅           | ❌            | ❌             |
+| macos-aarch64            | ❌           | ❌                | ❌           | ✅            | ❌             |
+| windows-x86_64           | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ✅             |
+| windows-aarch64          | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ✅             |
+| browser (wasm)           | ❌           | ❌                | ❌           | ❌            | ❌             |
+| browser (Html/Css/JS/TS) | ✅           | ✅                | ✅           | ✅            | ✅             |
 
 ## TODO
 
-- add support for: Rust (full), C#, Java, Html, Css, JS/JSX/TS/TSX, Wasm, Python
+- add support for: Rust (full), C#, Java, Html, Wasm, Python
 - rune.json
   - Parse config
   - Run scripts
@@ -149,6 +154,6 @@ echo "building with different flags..."
 - add support for compiler custom flags
 - make sth like ArgParser as wrapper for args parsing
 - add config.rawCompilerArgs to build command
-- implement targets: linux-aarch64-musl and windows-aarch64
 - minify html
 - add --types flag for .ts
+- fix windows-aarch64 wine error

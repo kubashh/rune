@@ -3,7 +3,6 @@ const builtin = @import("builtin");
 const consts = @import("../lib/consts.zig");
 const util = @import("../lib/util.zig");
 
-const tmp_alloc = consts.tmp_alloc;
 const StringList = consts.StringList;
 const Extention = consts.Extention;
 const Runner = consts.Runner;
@@ -13,7 +12,7 @@ const Config = consts.Config;
 const printErrExit = util.printErrExit;
 const cliProgramExists = util.cliProgramExists;
 
-pub fn processArgs(argsObj: std.process.Args) Config {
+pub fn processArgs(argsObj: std.process.Args, allocator: std.mem.Allocator) Config {
     var buf: [1024]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
     const alloc = fba.allocator();
@@ -66,7 +65,7 @@ pub fn processArgs(argsObj: std.process.Args) Config {
 
     if (args.next()) |outputPathOrFlag| {
         if (outputPathOrFlag[0] == '-') {
-            handleArg(&config, outputPathOrFlag, argsLeft);
+            handleArg(allocator, &config, outputPathOrFlag, argsLeft);
         } else {
             if (outputPathOrFlag[outputPathOrFlag.len - 1] == '/')
                 printErrExit("output_path can't end with '/'\n", .{});
@@ -84,11 +83,11 @@ pub fn processArgs(argsObj: std.process.Args) Config {
     }
 
     while (args.next()) |arg| {
-        handleArg(&config, arg, argsLeft);
+        handleArg(allocator, &config, arg, argsLeft);
     }
 
     if (config.runner != .none and config.runArgs == null) {
-        handleArg(&config, "--run", 0);
+        handleArg(allocator, &config, "--run", 0);
     }
 
     return config;
@@ -108,11 +107,11 @@ fn getDefaultRunner(extention: Extention) Runner {
     };
 }
 
-fn handleArg(config: *Config, arg: []const u8, argsLeft: usize) void {
+fn handleArg(allocator: std.mem.Allocator, config: *Config, arg: []const u8, argsLeft: usize) void {
     if (handleTarget(config, arg)) return;
     if (handleOptimization(config, arg)) return;
-    if (handleRunFlag(config, arg, argsLeft)) return;
-    if (handleExeArgs(config, arg)) return;
+    if (handleRunFlag(allocator, config, arg, argsLeft)) return;
+    if (handleExeArgs(allocator, config, arg)) return;
     if (handleInfoFlag(config, arg)) return;
     if (handleRawFlags(config, arg)) return;
     handleHelpFlag(arg);
@@ -152,9 +151,11 @@ fn getTarget(target: []const u8) ?Target {
     if (std.mem.eql(u8, target, "linux-x86_64")) return .@"linux-x86_64";
     if (std.mem.eql(u8, target, "linux-x86_64-musl")) return .@"linux-x86_64-musl";
     if (std.mem.eql(u8, target, "linux-aarch64")) return .@"linux-aarch64";
+    if (std.mem.eql(u8, target, "linux-aarch64-musl")) return .@"linux-aarch64-musl";
     if (std.mem.eql(u8, target, "macos-x86_64")) return .@"macos-x86_64";
     if (std.mem.eql(u8, target, "macos-aarch64")) return .@"macos-aarch64";
     if (std.mem.eql(u8, target, "windows-x86_64")) return .@"windows-x86_64";
+    if (std.mem.eql(u8, target, "windows-aarch64")) return .@"windows-aarch64";
     if (std.mem.eql(u8, target, "browser")) return .browser;
     return null;
 }
@@ -175,12 +176,12 @@ fn getOptimization(arg: []const u8) ?consts.Optimization {
     return null;
 }
 
-fn handleRunFlag(config: *Config, arg: []const u8, argsLeft: usize) bool {
+fn handleRunFlag(allocator: std.mem.Allocator, config: *Config, arg: []const u8, argsLeft: usize) bool {
     if (!std.mem.eql(u8, arg, "--run")) return false;
 
     var arrayLen = argsLeft;
 
-    const isTargetWindows = config.target == .@"windows-x86_64";
+    const isTargetWindows = config.target == .@"windows-x86_64" or config.target == .@"windows-aarch64";
 
     if (config.target == consts.defaultTarget) {
         config.runner = .native;
@@ -198,16 +199,16 @@ fn handleRunFlag(config: *Config, arg: []const u8, argsLeft: usize) bool {
         , .{ config.target, consts.defaultTarget });
     }
 
-    var runArgs = StringList.initCapacity(tmp_alloc, arrayLen) catch
+    var runArgs = StringList.initCapacity(allocator, arrayLen) catch
         printErrExit("out of memory when making run args ArrayList", .{});
-    runArgsAddRunner(&runArgs, config.runner);
+    runArgsAddRunner(allocator, &runArgs, config.runner);
 
     // add exe
     if (config.runner != .bun or std.mem.startsWith(u8, config.outputPath, "./cache"))
-        runArgs.append(tmp_alloc, config.outputPath) catch
+        runArgs.append(allocator, config.outputPath) catch
             printErrExit("out of memory when allocating run arg", .{})
     else
-        runArgs.append(tmp_alloc, config.inputPath) catch
+        runArgs.append(allocator, config.inputPath) catch
             printErrExit("out of memory when allocating run arg", .{});
 
     config.runArgs = runArgs;
@@ -221,19 +222,19 @@ fn handleInfoFlag(config: *Config, arg: []const u8) bool {
     return true;
 }
 
-fn runArgsAddRunner(runArgs: *StringList, runner: Runner) void {
+fn runArgsAddRunner(allocator: std.mem.Allocator, runArgs: *StringList, runner: Runner) void {
     switch (runner) {
-        .wine => runArgs.append(tmp_alloc, "wine") catch
+        .wine => runArgs.append(allocator, "wine") catch
             printErrExit("out of memory when allocating run arg", .{}),
-        .bun => runArgs.append(tmp_alloc, "bun") catch
+        .bun => runArgs.append(allocator, "bun") catch
             printErrExit("out of memory when allocating run arg", .{}),
         .native, .none => {},
     }
 }
 
-fn handleExeArgs(config: *Config, arg: []const u8) bool {
+fn handleExeArgs(allocator: std.mem.Allocator, config: *Config, arg: []const u8) bool {
     if (config.runArgs) |*runArgs| {
-        runArgs.append(tmp_alloc, arg) catch
+        runArgs.append(allocator, arg) catch
             printErrExit("out of memory when allocating run arg", .{});
         return true;
     }
@@ -270,9 +271,9 @@ const usageStr =
     \\  --target=[os]-[arch]-[abi?]                     Set target OS (default: current OS)
     \\
     \\supported targets:
-    \\    linux-x86_64, linux-x86_64-musl, linux-aarch64    Linux
-    \\    macos-x86_64, macos-aarch64                       Darwin
-    \\    windows-x86_64                                    Windows
+    \\    linux-x86_64, linux-x86_64-musl, linux-aarch64, linux-aarch64-musl    Linux
+    \\    macos-x86_64, macos-aarch64                                           Darwin
+    \\    windows-x86_64, windows-aarch64                                       Windows
     \\    browser                                           Wasm | HTML | CSS | JS | TS
     \\
     \\  --run                   Run compiled program. evry arg passed after --run will be pass into running exe

@@ -135,25 +135,17 @@ fn createBuildCommand(alloc: std.mem.Allocator, buildArgs: *StringList, config: 
                 .@"linux-x86_64" => "--target=bun-linux-x64",
                 .@"linux-x86_64-musl" => "--target=bun-linux-x64-musl",
                 .@"linux-aarch64" => "--target=bun-linux-arm64",
-                // --target=bun-linux-arm64-musl
+                .@"linux-aarch64-musl" => "--target=bun-linux-arm64-musl",
                 .@"macos-aarch64" => "--target=bun-darwin-arm64",
                 .@"macos-x86_64" => "--target=bun-darwin-x64",
                 .@"windows-x86_64" => "--target=bun-windows-x64",
-                // --target=bun-windows-arm64
+                .@"windows-aarch64" => "--target=bun-windows-arm64",
                 .browser => "--target=browser",
             });
             if (config.opt == .size or config.opt == .fast)
                 try buildArgs.append(alloc, "--minify");
             if (config.extention != .css)
                 try buildArgs.append(alloc, "--compile");
-            // try buildArgs.append(alloc, getOptimizeZig(config.opt));
-            // try buildArgs.append(alloc, "-target");
-            // try buildArgs.append(alloc, getTargetZig(config.target));
-            // printErrExit(
-            //     \\js/jsx/ts/tsx not supported yet (in development)!
-            //     \\see supported file extentions running 'rune -h'
-            //     \\
-            // , .{});
         },
         .py => printErrExit(
             \\python not supported yet (in development)!
@@ -177,9 +169,11 @@ fn getTargetZig(target: Target) []const u8 {
         .@"linux-x86_64" => "x86_64-linux",
         .@"linux-x86_64-musl" => "x86_64-linux-musl",
         .@"linux-aarch64" => "aarch64-linux",
+        .@"linux-aarch64-musl" => "aarch64-linux-musl",
         .@"macos-x86_64" => "x86_64-macos",
         .@"macos-aarch64" => "aarch64-macos",
         .@"windows-x86_64" => "x86_64-windows",
+        .@"windows-aarch64" => "aarch64-windows",
         .browser => "wasm32-freestanding",
     };
 }
@@ -225,9 +219,11 @@ fn getTargetRs(target: Target) []const u8 {
         .@"linux-x86_64" => "x86_64-unknown-linux-gnu",
         .@"linux-x86_64-musl" => "x86_64-unknown-linux-musl",
         .@"linux-aarch64" => "aarch64-unknown-linux-gnu",
+        .@"linux-aarch64-musl" => "aarch64-unknown-linux-musl",
         .@"macos-x86_64" => "aarch64-apple-darwin",
         .@"macos-aarch64" => "x86_64-apple-darwin",
         .@"windows-x86_64" => "x86_64-pc-windows-msvc",
+        .@"windows-aarch64" => "aarch64-pc-windows-msvc",
         .browser => "wasm32-wasip1",
     };
 }

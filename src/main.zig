@@ -7,13 +7,14 @@ const runProgram = @import("./runProgram.zig");
 const Config = consts.Config;
 
 pub fn main(init: std.process.Init) void {
-    var config: Config = cli.processArgs(init.minimal.args);
+    const allocator = init.arena.allocator();
+    var config: Config = cli.processArgs(init.minimal.args, allocator);
 
     compileProgram.compileProgram(init.io, &config);
 
     if (config.runArgs) |*runArgs| {
         if (config.info) runProgram.printRunInfo(runArgs.items);
         runProgram.runProgram(init.io, runArgs.items);
-        runArgs.deinit(consts.tmp_alloc);
+        runArgs.deinit(allocator);
     }
 }
