@@ -9,10 +9,50 @@ pub fn printErrExit(comptime fmt: []const u8, options: anytype) noreturn {
     std.process.exit(1);
 }
 
+pub fn printCommand(argsItems: []const []const u8) void {
+    for (argsItems) |arg|
+        if (std.mem.indexOfScalar(u8, arg, ' ') != null)
+            std.debug.print(" '{s}'", .{arg})
+        else
+            std.debug.print(" {s}", .{arg});
+}
+
 pub const SpawnSyncError = std.process.SpawnError || std.process.Child.WaitError;
 
 pub fn spawnSync(io: std.Io, options: std.process.SpawnOptions) SpawnSyncError!u8 {
-    var child = try std.process.spawn(io, options);
+    var child = std.process.spawn(io, options) catch |err|
+        if (err == error.FileNotFound) {
+            // zig
+            if (std.mem.eql(u8, options.argv[0], "zig")) {
+                printErrExit(
+                    \\zig don't exists! to compile zig, c, cpp zig is required!
+                    \\install zig from https://ziglang.org/download/
+                    \\
+                , .{});
+
+                return 1;
+            }
+            // rust
+            if (std.mem.eql(u8, options.argv[0], "rustc")) printErrExit(
+                \\rustc don't exists! to compile rust rustc is required!
+                \\install rustc
+                \\
+            , .{});
+            // bun
+            if (std.mem.eql(u8, options.argv[0], "bun")) printErrExit(
+                \\bun don't exists! to compile js/jsx/ts/tsx bunjs is required!
+                \\install bun from https://bun.com/docs/installation
+                \\or run: npm install -g bun # may requires sudo
+                \\
+            , .{});
+            // wine
+            if (std.mem.eql(u8, options.argv[0], "wine")) printErrExit(
+                \\wine don't exists! to run windows bin's on posix wine is required!
+                \\install wine
+                \\
+            , .{});
+            return error.FileNotFound;
+        } else return err;
     const result = try child.wait(io);
     return result.exited;
 }
@@ -65,9 +105,9 @@ pub const Measure = struct {
         return std.Io.Clock.Timestamp.now(io, .awake).raw.nanoseconds;
     }
 
-    pub inline fn print(io: std.Io, start_ns: i96, label: []const u8) void {
-        const end = std.Io.Clock.Timestamp.now(io, .awake).raw.nanoseconds;
-        const nanos = end - start_ns;
+    pub inline fn print(io: std.Io, startNs: i96, label: []const u8) void {
+        const now = Measure.start(io);
+        const nanos = now - startNs;
         switch (nanos) {
             0...999 => {
                 std.debug.print("{s}: {} ns\n", .{ label, nanos });

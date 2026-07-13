@@ -1,16 +1,13 @@
 const std = @import("std");
 const consts = @import("./lib/consts.zig");
-const ci = @import("./ci.zig");
-const checkAllPrograms = @import("./checkAllPrograms.zig");
+const cli = @import("./cli/cli.zig");
 const compileProgram = @import("./compileProgram.zig");
 const runProgram = @import("./runProgram.zig");
 
 const Config = consts.Config;
 
 pub fn main(init: std.process.Init) void {
-    var config: Config = ci.processArgs(init.minimal.args);
-
-    checkAllPrograms.checkAllPrograms(init.io, &config);
+    var config: Config = cli.processArgs(init.minimal.args);
 
     compileProgram.compileProgram(init.io, &config);
 

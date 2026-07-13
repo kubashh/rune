@@ -1,10 +1,9 @@
 # run this script before commit, it will tests building all possible targets
-rune src/main.zig dist/test/rune --debug
+sh ./build_dev.sh
 
 # test runners
 ./dist/test/rune example/main.zig dist/bin/runner-native                                           --run
 ./dist/test/rune example/main.zig dist/bin/runner-wine-windows-x64     --target=windows-x86_64     --run "one arg"
-./dist/test/rune example/main.zig dist/bin/runner-wine-windows-x64-gnu --target=windows-x86_64-gnu --run --flag 'str arg'
 
 # build with different optimalization flags
 ./dist/test/rune example/main.zig dist/bin/opt-zig-native-debug --debug
@@ -47,3 +46,18 @@ rune src/main.zig dist/test/rune --debug
 ./dist/test/rune example/main.cpp dist/bin/app-cpp-macos-x64      --target=macos-x86_64
 ./dist/test/rune example/main.cpp dist/bin/app-cpp-windows-x64    --target=windows-x86_64
 ./dist/test/rune example/wasm.cpp dist/bin/app-cpp-browser.wasm   --target=browser
+
+# build HTML/CSS
+./dist/test/rune example/index.html dist/bin/browser-index.html
+./dist/test/rune example/styles.css dist/bin/browser-styles.css
+
+# build JS/JSX/TS/TSX
+./dist/test/rune example/main.js dist/bin/app-js-linux-x64      --target=linux-x86_64
+./dist/test/rune example/main.js dist/bin/app-js-linux-x64-musl --target=linux-x86_64-musl
+./dist/test/rune example/main.js dist/bin/app-js-linux-arm64    --target=linux-aarch64
+./dist/test/rune example/main.ts dist/bin/app-ts-macos-arm64    --target=macos-aarch64
+./dist/test/rune example/main.ts dist/bin/app-ts-macos-x64      --target=macos-x86_64
+./dist/test/rune example/main.ts dist/bin/app-ts-windows-x64    --target=windows-x86_64
+./dist/test/rune example/script.js dist/bin/browser-script.js
+# ./dist/test/rune example/wasm.js dist/bin/app-jsx-browser.jsx   --target=browser # jsx need node_modules jsx specification
+# ./dist/test/rune example/wasm.js dist/bin/app-tsx-browser.tsx   --target=browser

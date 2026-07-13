@@ -9,10 +9,11 @@ pub const Target = enum {
     @"linux-x86_64",
     @"linux-x86_64-musl",
     @"linux-aarch64",
+    // @"linux-aarch64-musl", TODO implement
     @"macos-aarch64", // macOS ARM64 (Apple Silicon)
     @"macos-x86_64", // (Intel)
     @"windows-x86_64",
-    @"windows-x86_64-gnu",
+    // @"windows-aarch64", TODO implement
     browser, // wasm / html / css / js / ts
     // and runtime?
 };
@@ -22,7 +23,7 @@ pub const Optimization = enum {
     fast,
     size,
 };
-pub const Runner = enum { native, wine, none };
+pub const Runner = enum { native, wine, bun, none };
 pub const Extention = enum {
     zig,
     rs,
@@ -49,6 +50,7 @@ pub const Config = struct {
     extention: Extention,
     types: bool, // build ts/tsx only
     info: bool,
+    rawCompilerArgs: ?[]const u8,
 };
 
 // values
@@ -97,7 +99,6 @@ pub const defaultTarget: Target = switch (builtin.target.os.tag) {
     .windows => switch (builtin.target.cpu.arch) {
         .x86_64 => switch (builtin.target.abi) {
             .msvc => .@"windows-x86_64",
-            .gnu => .@"windows-x86_64-gnu",
             else => .browser,
         },
         else => .browser,

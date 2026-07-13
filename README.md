@@ -15,8 +15,8 @@ flags:
 supported targets:
     linux-x86_64, linux-x86_64-musl, linux-aarch64    Linux
     macos-x86_64, macos-aarch64                       Darwin
-    windows-x86_64, windows-x86_64-gnu                Windows
-    browser                                           Wasm | HTML | JS | TS
+    windows-x86_64                                    Windows
+    browser                                           Wasm | HTML | CSS | JS | TS
 
   --run                   Run compiled program. evry arg passed after --run will be pass into running exe
   --info                  Print build/run info (useful for debugging)
@@ -27,10 +27,13 @@ example usage:
   rune src/main.rs
   rune src/main.c dist/main --fast
   rune src/main.cpp dist/main --debug
+  rune src/server.js
+  rune src/main.ts dist/main.js --size
+  rune ./styles.css dist/styles.css --size
+  rune src/index.html dist/index.html --size
 
 supported extentions:
-  .zig, .rs (native), .c, .cpp
-
+  .zig, .rs (native), .c, .cpp, .html, .css, .js, .ts, .jsx (node_modules), .tsx (node_modules)
 ```
 
 ## Build code with rune
@@ -89,35 +92,48 @@ echo "building with different flags..."
 ./dist/bin/rune example/main.cpp dist/bin/app-cpp-macos-x64      --target=macos-x86_64
 ./dist/bin/rune example/main.cpp dist/bin/app-cpp-windows-x64    --target=windows-x86_64
 ./dist/bin/rune example/wasm.cpp dist/bin/app-cpp-browser.wasm   --target=browser
+
+# build HTML/CSS
+./dist/test/rune example/index.html dist/bin/browser-index.html
+./dist/test/rune example/styles.css dist/bin/browser-styles.css
+
+# build JS/JSX/TS/TSX
+./dist/test/rune example/main.js dist/bin/app-js-linux-x64      --target=linux-x86_64
+./dist/test/rune example/main.js dist/bin/app-js-linux-x64-musl --target=linux-x86_64-musl
+./dist/test/rune example/main.js dist/bin/app-js-linux-arm64    --target=linux-aarch64
+./dist/test/rune example/main.ts dist/bin/app-ts-macos-arm64    --target=macos-aarch64
+./dist/test/rune example/main.ts dist/bin/app-ts-macos-x64      --target=macos-x86_64
+./dist/test/rune example/main.ts dist/bin/app-ts-windows-x64    --target=windows-x86_64
+./dist/test/rune example/script.js dist/bin/browser-script.js
+# ./dist/test/rune example/wasm.js dist/bin/app-jsx-browser.jsx   --target=browser # jsx need node_modules jsx specification
+# ./dist/test/rune example/wasm.js dist/bin/app-tsx-browser.tsx   --target=browser
 ```
 
 ## Suppoted
 
 ### Targets
 
-| Os-Arch-Abi        | Zig | Rust                      | C   | C++ | C#  | Java | Browser(Html/Css/JS/JSX/TS/TSX/Wasm) | Py  |
-| ------------------ | --- | ------------------------- | --- | --- | --- | ---- | ------------------------------------ | --- |
-| linux-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
-| linux-x86_64-musl  | ✅  | ⚠️ (native, linux-x86_64) | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
-| linux-aarch64      | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
-| macos-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
-| macos-aarch64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
-| windows-x86_64     | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
-| windows-x86_64-gnu | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
-| browser (wasm)     | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ❌                                   | ❌  |
+| Os-Arch-Abi       | Zig | Rust                      | C   | C++ | C#  | Java | Browser(Html/Css/JS/TS) | JSX//TSX          | Py  |
+| ----------------- | --- | ------------------------- | --- | --- | --- | ---- | ----------------------- | ----------------- | --- |
+| linux-x86_64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| linux-x86_64-musl | ✅  | ⚠️ (native, linux-x86_64) | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| linux-aarch64     | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| macos-x86_64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| macos-aarch64     | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| windows-x86_64    | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| browser (wasm)    | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
 
 ### Code runners (Testing exe's)
 
-| target             | linux-x86_64 | linux-x86_64-musl | macos-x86_64 | macos-aarch64 | windows-x86_64 | windows-x86_64-gnu |
-| ------------------ | ------------ | ----------------- | ------------ | ------------- | -------------- | ------------------ |
-| linux-x86_64       | ✅           | ❌                | ❌           | ❌            | ❌             | ❌                 |
-| linux-x86_64-musl  | ❌           | ✅                | ❌           | ❌            | ❌             | ❌                 |
-| linux-aarch64      | ❌           | ❌                | ❌           | ❌            | ❌             | ❌                 |
-| macos-x86_64       | ❌           | ❌                | ✅           | ❌            | ❌             | ❌                 |
-| macos-aarch64      | ❌           | ❌                | ❌           | ✅            | ❌             | ❌                 |
-| windows-x86_64     | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ✅             | ❌                 |
-| windows-x86_64-gnu | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ❌             | ✅                 |
-| browser (wasm)     | ❌           | ❌                | ❌           | ❌            | ❌             | ❌                 |
+| target            | linux-x86_64 | linux-x86_64-musl | macos-x86_64 | macos-aarch64 | windows-x86_64 |
+| ----------------- | ------------ | ----------------- | ------------ | ------------- | -------------- |
+| linux-x86_64      | ✅           | ❌                | ❌           | ❌            | ❌             |
+| linux-x86_64-musl | ❌           | ✅                | ❌           | ❌            | ❌             |
+| linux-aarch64     | ❌           | ❌                | ❌           | ❌            | ❌             |
+| macos-x86_64      | ❌           | ❌                | ✅           | ❌            | ❌             |
+| macos-aarch64     | ❌           | ❌                | ❌           | ✅            | ❌             |
+| windows-x86_64    | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ✅             |
+| browser (wasm)    | ❌           | ❌                | ❌           | ❌            | ❌             |
 
 ## TODO
 
@@ -126,10 +142,13 @@ echo "building with different flags..."
   - Parse config
   - Run scripts
   - Dev mode
-  - Release mode
+  - Build mode
 - build target windows: create .pdb file only when opt == .debug
 - add support for development on android
 - add support for zig cInclude (-lc)
 - add support for compiler custom flags
-- add --info flag for printing info
 - make sth like ArgParser as wrapper for args parsing
+- add config.rawCompilerArgs to build command
+- implement targets: linux-aarch64-musl and windows-aarch64
+- minify html
+- add --types flag for .ts

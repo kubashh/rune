@@ -1,7 +1,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
-const consts = @import("./lib/consts.zig");
-const util = @import("./lib/util.zig");
+const consts = @import("../lib/consts.zig");
+const util = @import("../lib/util.zig");
 
 const tmp_alloc = consts.tmp_alloc;
 const StringList = consts.StringList;
@@ -55,10 +55,11 @@ pub fn processArgs(argsObj: std.process.Args) Config {
         .extention = extention,
         .opt = .debug,
         .target = getDefaultTarget(extention),
-        .runner = .native,
+        .runner = getDefaultRunner(extention),
         .runArgs = null,
         .types = false,
         .info = false,
+        .rawCompilerArgs = null,
     };
 
     var argsLeft = argsObj.vector.len - 2;
@@ -71,9 +72,10 @@ pub fn processArgs(argsObj: std.process.Args) Config {
                 printErrExit("output_path can't end with '/'\n", .{});
             if (std.mem.indexOfScalar(u8, outputPathOrFlag, '/') == null)
                 printErrExit(
-                    "output_path must starts with './' when doesn't containing '/'\ntry: './{s}'\n",
-                    .{outputPathOrFlag},
-                );
+                    \\output_path must starts with './' when doesn't containing '/'
+                    \\try: './{s}'
+                    \\
+                , .{outputPathOrFlag});
             config.outputPath = outputPathOrFlag;
             config.runner = .none;
             config.opt = .fast;
@@ -83,6 +85,10 @@ pub fn processArgs(argsObj: std.process.Args) Config {
 
     while (args.next()) |arg| {
         handleArg(&config, arg, argsLeft);
+    }
+
+    if (config.runner != .none and config.runArgs == null) {
+        handleArg(&config, "--run", 0);
     }
 
     return config;
@@ -95,13 +101,22 @@ fn getDefaultTarget(extention: Extention) Target {
     };
 }
 
+fn getDefaultRunner(extention: Extention) Runner {
+    return switch (extention) {
+        .html, .css, .js, .jsx, .ts, .tsx => .bun,
+        else => .native,
+    };
+}
+
 fn handleArg(config: *Config, arg: []const u8, argsLeft: usize) void {
     if (handleTarget(config, arg)) return;
     if (handleOptimization(config, arg)) return;
     if (handleRunFlag(config, arg, argsLeft)) return;
     if (handleExeArgs(config, arg)) return;
     if (handleInfoFlag(config, arg)) return;
+    if (handleRawFlags(config, arg)) return;
     handleHelpFlag(arg);
+    // TODO add/install targets/deps
 
     // Unhandled arg
     printErrExit(
@@ -140,7 +155,6 @@ fn getTarget(target: []const u8) ?Target {
     if (std.mem.eql(u8, target, "macos-x86_64")) return .@"macos-x86_64";
     if (std.mem.eql(u8, target, "macos-aarch64")) return .@"macos-aarch64";
     if (std.mem.eql(u8, target, "windows-x86_64")) return .@"windows-x86_64";
-    if (std.mem.eql(u8, target, "windows-x86_64-gnu")) return .@"windows-x86_64-gnu";
     if (std.mem.eql(u8, target, "browser")) return .browser;
     return null;
 }
@@ -162,16 +176,19 @@ fn getOptimization(arg: []const u8) ?consts.Optimization {
 }
 
 fn handleRunFlag(config: *Config, arg: []const u8, argsLeft: usize) bool {
-    if (!std.mem.startsWith(u8, arg, "--run")) return false;
+    if (!std.mem.eql(u8, arg, "--run")) return false;
 
     var arrayLen = argsLeft;
 
-    const isTargetWindows = config.target == .@"windows-x86_64" or config.target == .@"windows-x86_64-gnu";
+    const isTargetWindows = config.target == .@"windows-x86_64";
 
     if (config.target == consts.defaultTarget) {
         config.runner = .native;
     } else if ((builtin.target.os.tag != .windows) and isTargetWindows) {
         config.runner = .wine;
+        arrayLen += 1;
+    } else if (config.extention == .js) {
+        config.runner = .bun;
         arrayLen += 1;
     } else {
         std.log.warn(
@@ -186,8 +203,12 @@ fn handleRunFlag(config: *Config, arg: []const u8, argsLeft: usize) bool {
     runArgsAddRunner(&runArgs, config.runner);
 
     // add exe
-    runArgs.append(tmp_alloc, config.outputPath) catch
-        printErrExit("out of memory when allocating run arg", .{});
+    if (config.runner != .bun or std.mem.startsWith(u8, config.outputPath, "./cache"))
+        runArgs.append(tmp_alloc, config.outputPath) catch
+            printErrExit("out of memory when allocating run arg", .{})
+    else
+        runArgs.append(tmp_alloc, config.inputPath) catch
+            printErrExit("out of memory when allocating run arg", .{});
 
     config.runArgs = runArgs;
 
@@ -195,7 +216,7 @@ fn handleRunFlag(config: *Config, arg: []const u8, argsLeft: usize) bool {
 }
 
 fn handleInfoFlag(config: *Config, arg: []const u8) bool {
-    if (!std.mem.startsWith(u8, arg, "--info")) return false;
+    if (!std.mem.eql(u8, arg, "--info")) return false;
     config.info = true;
     return true;
 }
@@ -203,6 +224,8 @@ fn handleInfoFlag(config: *Config, arg: []const u8) bool {
 fn runArgsAddRunner(runArgs: *StringList, runner: Runner) void {
     switch (runner) {
         .wine => runArgs.append(tmp_alloc, "wine") catch
+            printErrExit("out of memory when allocating run arg", .{}),
+        .bun => runArgs.append(tmp_alloc, "bun") catch
             printErrExit("out of memory when allocating run arg", .{}),
         .native, .none => {},
     }
@@ -216,6 +239,21 @@ fn handleExeArgs(config: *Config, arg: []const u8) bool {
     }
 
     return false;
+}
+
+fn handleRawFlags(config: *Config, arg: []const u8) bool {
+    if (!std.mem.startsWith(u8, arg, "--raw")) return false;
+
+    if (std.mem.indexOfScalar(u8, arg, '=')) |pos| {
+        _ = config;
+        _ = pos;
+        printErrExit("raw compiler args is not supported yet\n", .{});
+        // config.rawCompilerArgs = arg[pos + 1 ..];
+    } else {
+        printErrExit("bad --raw flag! try: --target=[target]\n", .{});
+    }
+
+    return true;
 }
 
 fn handleHelpFlag(arg: []const u8) void {
@@ -234,8 +272,8 @@ const usageStr =
     \\supported targets:
     \\    linux-x86_64, linux-x86_64-musl, linux-aarch64    Linux
     \\    macos-x86_64, macos-aarch64                       Darwin
-    \\    windows-x86_64, windows-x86_64-gnu                Windows
-    \\    browser                                           Wasm | HTML | JS | TS
+    \\    windows-x86_64                                    Windows
+    \\    browser                                           Wasm | HTML | CSS | JS | TS
     \\
     \\  --run                   Run compiled program. evry arg passed after --run will be pass into running exe
     \\  --info                  Print build/run info (useful for debugging)
@@ -246,12 +284,13 @@ const usageStr =
     \\  rune src/main.rs
     \\  rune src/main.c dist/main --fast
     \\  rune src/main.cpp dist/main --debug
-    // \\  rune src/server.ts
-    // \\  rune src/main.ts dist/main.js --size
-    // \\  rune src/index.html dist/index.html --size
+    \\  rune src/server.js
+    \\  rune src/main.ts dist/main.js --size
+    \\  rune ./styles.css dist/styles.css --size
+    \\  rune src/index.html dist/index.html --size
     \\
     \\supported extentions:
-    \\  .zig, .rs (native), .c, .cpp
+    \\  .zig, .rs (native), .c, .cpp, .html, .css, .js, .ts, .jsx (node_modules), .tsx (node_modules)
     \\
 ;
 
