@@ -41,74 +41,85 @@ supported extentions:
 ```sh
 rm -rf dist
 echo "building with different flags..."
+
 # test runners
-rune example/main.zig
-rune example/main.zig --target=windows-x86_64 --run "one arg"
+rune example/cli/main.zig
+rune example/cli/main.zig --target=windows-x86_64 --run "one arg"
 
 # build with different optimalization flags
-rune example/main.zig dist/opt/zig-native-debug --debug
-rune example/main.zig dist/opt/zig-native-safe  --safe
-rune example/main.zig dist/opt/zig-native-size  --size
-rune example/main.zig dist/opt/zig-native-fast  --fast
+rune example/cli/main.zig dist/opt/zig-native-debug --debug
+rune example/cli/main.zig dist/opt/zig-native-safe  --safe
+rune example/cli/main.zig dist/opt/zig-native-size  --size
+rune example/cli/main.zig dist/opt/zig-native-fast  --fast
 
 # build Zig
-rune example/main.zig dist/zig/app-linux-x86_64       --target=linux-x86_64
-rune example/main.zig dist/zig/app-linux-x86_64-musl  --target=linux-x86_64-musl
-rune example/main.zig dist/zig/app-linux-aarch64      --target=linux-aarch64
-rune example/main.zig dist/zig/app-linux-aarch64-musl --target=linux-aarch64-musl
-rune example/main.zig dist/zig/app-macos-aarch64      --target=macos-aarch64
-rune example/main.zig dist/zig/app-macos-x86_64       --target=macos-x86_64
-rune example/main.zig dist/zig/app-windows-x86_64     --target=windows-x86_64
-rune example/main.zig dist/zig/app-windows-aarch64    --target=windows-aarch64
-rune example/wasm.zig dist/zig/app-browser.wasm       --target=browser
+rune example/cli/main.zig dist/zig/app-linux-x86_64       --target=linux-x86_64
+rune example/cli/main.zig dist/zig/app-linux-x86_64-musl  --target=linux-x86_64-musl
+rune example/cli/main.zig dist/zig/app-linux-aarch64      --target=linux-aarch64
+rune example/cli/main.zig dist/zig/app-linux-aarch64-musl --target=linux-aarch64-musl
+rune example/cli/main.zig dist/zig/app-macos-aarch64      --target=macos-aarch64
+rune example/cli/main.zig dist/zig/app-macos-x86_64       --target=macos-x86_64
+rune example/cli/main.zig dist/zig/app-windows-x86_64     --target=windows-x86_64
+rune example/cli/main.zig dist/zig/app-windows-aarch64    --target=windows-aarch64
+rune example/browser/wasm.zig dist/zig/app-browser.wasm   --target=browser
 
 # build Rust
-rune example/main.rs dist/rs/app-linux-x86_64       --target=linux-x86_64
-rune example/main.rs dist/rs/app-linux-x86_64-musl  --target=linux-x86_64-musl
-# rune example/main.rs dist/rs/app-linux-aarch64      --target=linux-aarch64
-# rune example/main.rs dist/rs/app-linux-aarch64-musl --target=linux-aarch64-musl
-# rune example/main.rs dist/rs/app-macos-aarch64      --target=macos-aarch64
-# rune example/main.rs dist/rs/app-macos-x86_64       --target=macos-x86_64
-# rune example/main.rs dist/rs/app-windows-x86_64     --target=windows-x86_64
-# rune example/main.rs dist/rs/app-windows-aarch64    --target=windows-aarch64
-# rune example/wasm.rs dist/rs/app-browser.wasm        --target=browser
+rune example/cli/main.rs dist/rs/app-linux-x86_64       --target=linux-x86_64
+rune example/cli/main.rs dist/rs/app-linux-x86_64-musl  --target=linux-x86_64-musl
+# rune example/cli/main.rs dist/rs/app-linux-aarch64      --target=linux-aarch64
+# rune example/cli/main.rs dist/rs/app-linux-aarch64-musl --target=linux-aarch64-musl
+# rune example/cli/main.rs dist/rs/app-macos-aarch64      --target=macos-aarch64
+# rune example/cli/main.rs dist/rs/app-macos-x86_64       --target=macos-x86_64
+# rune example/cli/main.rs dist/rs/app-windows-x86_64     --target=windows-x86_64
+# rune example/cli/main.rs dist/rs/app-windows-aarch64    --target=windows-aarch64
+# rune example/browser/wasm.rs dist/rs/app-browser.wasm   --target=browser
 
 # build C
-rune example/main.c dist/c/app-linux-x86_64      --target=linux-x86_64
-rune example/main.c dist/c/app-linux-x86_64-musl --target=linux-x86_64-musl
-rune example/main.c dist/c/app-linux-aarch64     --target=linux-aarch64
-rune example/main.c dist/c/app-linux-aarch64     --target=linux-aarch64
-rune example/main.c dist/c/app-macos-aarch64     --target=macos-aarch64
-rune example/main.c dist/c/app-macos-x86_64      --target=macos-x86_64
-rune example/main.c dist/c/app-windows-x86_64    --target=windows-x86_64
-rune example/main.c dist/c/app-windows-aarch64   --target=windows-aarch64
-rune example/wasm.c dist/c/app-browser.wasm      --target=browser
+rune example/cli/main.c dist/c/app-linux-x86_64       --target=linux-x86_64
+rune example/cli/main.c dist/c/app-linux-x86_64-musl  --target=linux-x86_64-musl
+rune example/cli/main.c dist/c/app-linux-aarch64      --target=linux-aarch64
+rune example/cli/main.c dist/c/app-linux-aarch64-musl --target=linux-aarch64-musl
+rune example/cli/main.c dist/c/app-macos-aarch64      --target=macos-aarch64
+rune example/cli/main.c dist/c/app-macos-x86_64       --target=macos-x86_64
+rune example/cli/main.c dist/c/app-windows-x86_64     --target=windows-x86_64
+rune example/cli/main.c dist/c/app-windows-aarch64    --target=windows-aarch64
+rune example/browser/wasm.c dist/c/app-browser.wasm   --target=browser
 
 # build C++
-rune example/main.cpp dist/cpp/app-linux-x86_64       --target=linux-x86_64
-rune example/main.cpp dist/cpp/app-linux-x86_64-musl  --target=linux-x86_64-musl
-rune example/main.cpp dist/cpp/app-linux-aarch64      --target=linux-aarch64
-rune example/main.cpp dist/cpp/app-linux-aarch64-musl --target=linux-aarch64-musl
-rune example/main.cpp dist/cpp/app-macos-aarch64      --target=macos-aarch64
-rune example/main.cpp dist/cpp/app-macos-x86_64       --target=macos-x86_64
-rune example/main.cpp dist/cpp/app-windows-x86_64     --target=windows-x86_64
-rune example/main.cpp dist/cpp/app-windows-aarch64    --target=windows-aarch64
-rune example/wasm.cpp dist/cpp/app-browser.wasm       --target=browser
+rune example/cli/main.cpp dist/cpp/app-linux-x86_64       --target=linux-x86_64
+rune example/cli/main.cpp dist/cpp/app-linux-x86_64-musl  --target=linux-x86_64-musl
+rune example/cli/main.cpp dist/cpp/app-linux-aarch64      --target=linux-aarch64
+rune example/cli/main.cpp dist/cpp/app-linux-aarch64-musl --target=linux-aarch64-musl
+rune example/cli/main.cpp dist/cpp/app-macos-aarch64      --target=macos-aarch64
+rune example/cli/main.cpp dist/cpp/app-macos-x86_64       --target=macos-x86_64
+rune example/cli/main.cpp dist/cpp/app-windows-x86_64     --target=windows-x86_64
+rune example/cli/main.cpp dist/cpp/app-windows-aarch64    --target=windows-aarch64
+rune example/browser/wasm.cpp dist/cpp/app-browser.wasm   --target=browser
 
-# build HTML/CSS
-rune example/index.html dist/browser/index.html
-rune example/styles.css dist/browser/new-styles.css
-rune example/script.js dist/browser/new-script.js
+# build HTML/CSS/JS
+rune example/browser/index.html dist/browser/index.html
+rune example/browser/styles.css dist/browser/new-styles.css
+rune example/browser/script.js dist/browser/new-script.js
 
-# build JS/JSX/TS/TSX
-rune example/main.js dist/js/app-linux-x86_64       --target=linux-x86_64
-rune example/main.js dist/js/app-linux-x86_64-musl  --target=linux-x86_64-musl
-rune example/main.js dist/js/app-linux-aarch64      --target=linux-aarch64
-rune example/main.js dist/js/app-linux-aarch64-musl --target=linux-aarch64-musl
-rune example/main.ts dist/ts/app-macos-aarch64      --target=macos-aarch64
-rune example/main.ts dist/ts/app-macos-x86_64       --target=macos-x86_64
-rune example/main.ts dist/ts/app-windows-x86_64     --target=windows-x86_64
-rune example/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
+# build JS/TS
+rune example/cli/main.js dist/js/app-linux-x86_64       --target=linux-x86_64
+rune example/cli/main.js dist/js/app-linux-x86_64-musl  --target=linux-x86_64-musl
+rune example/cli/main.js dist/js/app-linux-aarch64      --target=linux-aarch64
+rune example/cli/main.js dist/js/app-linux-aarch64-musl --target=linux-aarch64-musl
+rune example/cli/main.ts dist/ts/app-macos-aarch64      --target=macos-aarch64
+rune example/cli/main.ts dist/ts/app-macos-x86_64       --target=macos-x86_64
+rune example/cli/main.ts dist/ts/app-windows-x86_64     --target=windows-x86_64
+rune example/cli/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
+
+# build python
+# rune example/cli/main.py dist/py/app-linux-x86_64       --target=linux-x86_64
+# rune example/cli/main.py dist/py/app-linux-x86_64-musl  --target=linux-x86_64-musl
+# rune example/cli/main.py dist/py/app-linux-aarch64      --target=linux-aarch64
+# rune example/cli/main.py dist/py/app-linux-aarch64-musl --target=linux-aarch64-musl
+# rune example/cli/main.py dist/py/app-macos-aarch64      --target=macos-aarch64
+# rune example/cli/main.py dist/py/app-macos-x86_64       --target=macos-x86_64
+# rune example/cli/main.py dist/py/app-windows-x86_64     --target=windows-x86_64
+# rune example/cli/main.py dist/py/app-windows-aarch64    --target=windows-aarch64
 ```
 
 ## Suppoted
@@ -135,14 +146,14 @@ rune example/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
 | linux-aarch64-musl       | ❌           | ❌                | ❌           | ❌            | ❌             |
 | macos-x86_64             | ❌           | ❌                | ✅           | ❌            | ❌             |
 | macos-aarch64            | ❌           | ❌                | ❌           | ✅            | ❌             |
-| windows-x86_64           | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ✅             |
-| windows-aarch64          | ✅ (wine)    | ⚠️ (wine?)        | ⚠️ (wine?)   | ⚠️ (wine?)    | ✅             |
+| windows-x86_64           | ✅ (wine)    | ✅ (wine)         | ✅ (wine)    | ✅ (wine)     | ✅             |
+| windows-aarch64          | ❌ (wine)    | ❌ (wine)         | ❌ (wine)    | ❌ (wine)     | ❌             |
 | browser (wasm)           | ❌           | ❌                | ❌           | ❌            | ❌             |
 | browser (Html/Css/JS/TS) | ✅           | ✅                | ✅           | ✅            | ✅             |
 
 ## TODO
 
-- add support for: Rust (full), C#, Java, Html, Wasm, Python
+- add support for: Rust (full), C#, Java, Wasm, Python
 - rune.json
   - Parse config
   - Run scripts
@@ -153,7 +164,6 @@ rune example/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
 - add support for zig cInclude (-lc)
 - add support for compiler custom flags
 - make sth like ArgParser as wrapper for args parsing
-- add config.rawCompilerArgs to build command
-- minify html
+- add config.raw_compiler_args to build command
 - add --types flag for .ts
 - fix windows-aarch64 wine error

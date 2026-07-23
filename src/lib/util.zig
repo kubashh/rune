@@ -9,8 +9,8 @@ pub fn printErrExit(comptime fmt: []const u8, options: anytype) noreturn {
     std.process.exit(1);
 }
 
-pub fn printCommand(argsItems: []const []const u8) void {
-    for (argsItems) |arg|
+pub fn printCommand(args_items: []const []const u8) void {
+    for (args_items) |arg|
         if (std.mem.indexOfScalar(u8, arg, ' ') != null)
             std.debug.print(" '{s}'", .{arg})
         else
@@ -66,30 +66,30 @@ pub fn spawnSyncInherit(io: std.Io, argv: []const []const u8) SpawnSyncError!u8 
     });
 }
 
-pub fn cliProgramExists(io: std.Io, comptime cliName: []const u8) bool {
-    const exitCode = spawnSync(io, .{
-        .argv = switch (builtin.target.os.tag) {
-            // windows, not tested!!! (TODO test windows)
-            .windows => &[_][]const u8{
-                "powershell",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-Command",
-                "if (Get-Command " ++ cliName ++ " -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }",
-            },
-            // posix
-            else => &[_][]const u8{ "sh", "-c", "command -v " ++ cliName ++ " >/dev/null 2>&1" },
-        },
-        .stdin = .ignore,
-        .stdout = .ignore,
-        .stderr = .ignore,
-    }) catch {
-        return false;
-    };
+// pub fn cliProgramExists(io: std.Io, comptime cli_name: []const u8) bool {
+//     const exitCode = spawnSync(io, .{
+//         .argv = switch (builtin.target.os.tag) {
+//             // windows, not tested!!! (TODO test windows)
+//             .windows => &[_][]const u8{
+//                 "powershell",
+//                 "-NoProfile",
+//                 "-ExecutionPolicy",
+//                 "Bypass",
+//                 "-Command",
+//                 "if (Get-Command " ++ cli_name ++ " -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }",
+//             },
+//             // posix
+//             else => &[_][]const u8{ "sh", "-c", "command -v " ++ cli_name ++ " >/dev/null 2>&1" },
+//         },
+//         .stdin = .ignore,
+//         .stdout = .ignore,
+//         .stderr = .ignore,
+//     }) catch {
+//         return false;
+//     };
 
-    return exitCode == 0;
-}
+//     return exitCode == 0;
+// }
 
 pub fn fileExistsCwd(io: std.Io, path: []const u8) bool {
     const cwd = std.Io.Dir.cwd();

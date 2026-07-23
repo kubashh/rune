@@ -41,21 +41,21 @@ pub const Extention = enum {
 };
 
 pub const Config = struct {
-    inputPath: []const u8,
-    outputPath: []const u8,
+    input_path: []const u8,
+    output_path: []const u8,
     target: Target,
     opt: Optimization,
     runner: Runner,
-    runArgs: ?StringList,
+    run_args: ?StringList,
     extention: Extention,
     types: bool, // build ts/tsx only
     info: bool,
-    rawCompilerArgs: ?[]const u8,
+    raw_compiler_args: ?[]const u8,
 };
 
 // values
 
-pub const runeVersion = "0.2.0-dev";
+pub const rune_version = "0.2.0-dev";
 
 //  OsTags
 //      1.  linux, macos, windows
@@ -79,7 +79,7 @@ pub const runeVersion = "0.2.0-dev";
 //      4.  eabihf (ARM embedded)
 //      4.  gnueabihf (Linux ARM hard-float)
 
-pub const defaultTarget: Target = switch (builtin.target.os.tag) {
+pub const default_target: Target = switch (builtin.target.os.tag) {
     .linux => switch (builtin.target.cpu.arch) {
         .x86_64 => switch (builtin.target.abi) {
             .gnu => .@"linux-x86_64",

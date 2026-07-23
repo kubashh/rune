@@ -12,11 +12,11 @@ const Config = consts.Config;
 const printErrExit = util.printErrExit;
 const cliProgramExists = util.cliProgramExists;
 
-pub fn processArgs(argsObj: std.process.Args, allocator: std.mem.Allocator) Config {
+pub fn processArgs(Args: std.process.Args, allocator: std.mem.Allocator) Config {
     var buf: [1024]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(buf[0..]);
     const alloc = fba.allocator();
-    var args = argsObj.iterateAllocator(alloc) catch |err| {
+    var args = Args.iterateAllocator(alloc) catch |err| {
         printErrExit("allocating cli args fail. err: {}\n", .{err});
     };
     defer args.deinit();
@@ -24,19 +24,19 @@ pub fn processArgs(argsObj: std.process.Args, allocator: std.mem.Allocator) Conf
     // Skip exe path
     _ = args.skip();
 
-    var inputPath: []const u8 = undefined;
+    var input_path: []const u8 = undefined;
 
-    if (args.next()) |firstArg| {
-        handleHelpFlag(firstArg);
-        if (firstArg[0] == '-') {
+    if (args.next()) |first_arg| {
+        handleHelpFlag(first_arg);
+        if (first_arg[0] == '-') {
             printErrExit(
                 \\first argument is input path, never flag!
                 \\Arg passed: {s}
                 \\run 'rune --help' for usage
                 \\
-            , .{firstArg});
+            , .{first_arg});
         }
-        inputPath = firstArg;
+        input_path = first_arg;
     } else {
         // TODO handle rune.json
         printErrExit(
@@ -46,47 +46,47 @@ pub fn processArgs(argsObj: std.process.Args, allocator: std.mem.Allocator) Conf
         , .{});
     }
 
-    const extention = getExtention(inputPath);
+    const extention = getExtention(input_path);
 
     var config: Config = .{
-        .inputPath = inputPath,
-        .outputPath = ".cache/rune/tmp",
+        .input_path = input_path,
+        .output_path = ".cache/rune/tmp",
         .extention = extention,
         .opt = .debug,
         .target = getDefaultTarget(extention),
         .runner = getDefaultRunner(extention),
-        .runArgs = null,
+        .run_args = null,
         .types = false,
         .info = false,
-        .rawCompilerArgs = null,
+        .raw_compiler_args = null,
     };
 
-    var argsLeft = argsObj.vector.len - 2;
+    var args_left = Args.vector.len - 2;
 
-    if (args.next()) |outputPathOrFlag| {
-        if (outputPathOrFlag[0] == '-') {
-            handleArg(allocator, &config, outputPathOrFlag, argsLeft);
+    if (args.next()) |output_path_or_flag| {
+        if (output_path_or_flag[0] == '-') {
+            handleArg(allocator, &config, output_path_or_flag, args_left);
         } else {
-            if (outputPathOrFlag[outputPathOrFlag.len - 1] == '/')
+            if (output_path_or_flag[output_path_or_flag.len - 1] == '/')
                 printErrExit("output_path can't end with '/'\n", .{});
-            if (std.mem.indexOfScalar(u8, outputPathOrFlag, '/') == null)
+            if (std.mem.indexOfScalar(u8, output_path_or_flag, '/') == null)
                 printErrExit(
                     \\output_path must starts with './' when doesn't containing '/'
                     \\try: './{s}'
                     \\
-                , .{outputPathOrFlag});
-            config.outputPath = outputPathOrFlag;
+                , .{output_path_or_flag});
+            config.output_path = output_path_or_flag;
             config.runner = .none;
             config.opt = .fast;
         }
-        argsLeft -= 1;
+        args_left -= 1;
     }
 
     while (args.next()) |arg| {
-        handleArg(allocator, &config, arg, argsLeft);
+        handleArg(allocator, &config, arg, args_left);
     }
 
-    if (config.runner != .none and config.runArgs == null) {
+    if (config.runner != .none and config.run_args == null) {
         handleArg(allocator, &config, "--run", 0);
     }
 
@@ -96,7 +96,7 @@ pub fn processArgs(argsObj: std.process.Args, allocator: std.mem.Allocator) Conf
 fn getDefaultTarget(extention: Extention) Target {
     return switch (extention) {
         .html, .css, .js, .jsx, .ts, .tsx => .browser,
-        else => consts.defaultTarget,
+        else => consts.default_target,
     };
 }
 
@@ -107,10 +107,10 @@ fn getDefaultRunner(extention: Extention) Runner {
     };
 }
 
-fn handleArg(allocator: std.mem.Allocator, config: *Config, arg: []const u8, argsLeft: usize) void {
+fn handleArg(allocator: std.mem.Allocator, config: *Config, arg: []const u8, args_left: usize) void {
     if (handleTarget(config, arg)) return;
     if (handleOptimization(config, arg)) return;
-    if (handleRunFlag(allocator, config, arg, argsLeft)) return;
+    if (handleRunFlag(allocator, config, arg, args_left)) return;
     if (handleExeArgs(allocator, config, arg)) return;
     if (handleInfoFlag(config, arg)) return;
     if (handleRawFlags(config, arg)) return;
@@ -129,9 +129,9 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
     if (!std.mem.startsWith(u8, arg, "--target")) return false;
 
     if (std.mem.indexOfScalar(u8, arg, '=')) |pos| {
-        const targetStr = arg[pos + 1 ..];
+        const target_str = arg[pos + 1 ..];
 
-        if (getTarget(targetStr)) |target|
+        if (getTarget(target_str)) |target|
             config.target = target
         else
             printErrExit(
@@ -139,7 +139,7 @@ fn handleTarget(config: *Config, arg: []const u8) bool {
                 \\try: --target=[target]
                 \\run 'rune --help' to see supported targets
                 \\
-            , .{targetStr});
+            , .{target_str});
     } else {
         printErrExit("bad --target flag! try: --target=[target]\n", .{});
     }
@@ -176,42 +176,42 @@ fn getOptimization(arg: []const u8) ?consts.Optimization {
     return null;
 }
 
-fn handleRunFlag(allocator: std.mem.Allocator, config: *Config, arg: []const u8, argsLeft: usize) bool {
+fn handleRunFlag(allocator: std.mem.Allocator, config: *Config, arg: []const u8, args_left: usize) bool {
     if (!std.mem.eql(u8, arg, "--run")) return false;
 
-    var arrayLen = argsLeft;
+    var array_len = args_left;
 
-    const isTargetWindows = config.target == .@"windows-x86_64" or config.target == .@"windows-aarch64";
+    const is_target_windows = config.target == .@"windows-x86_64" or config.target == .@"windows-aarch64";
 
-    if (config.target == consts.defaultTarget) {
+    if (config.target == consts.default_target) {
         config.runner = .native;
-    } else if ((builtin.target.os.tag != .windows) and isTargetWindows) {
+    } else if ((builtin.target.os.tag != .windows) and is_target_windows) {
         config.runner = .wine;
-        arrayLen += 1;
+        array_len += 1;
     } else if (config.extention == .js) {
         config.runner = .bun;
-        arrayLen += 1;
+        array_len += 1;
     } else {
         std.log.warn(
             \\--run flag unsupported for target: {} on {}
             \\remove --run flag from command
             \\
-        , .{ config.target, consts.defaultTarget });
+        , .{ config.target, consts.default_target });
     }
 
-    var runArgs = StringList.initCapacity(allocator, arrayLen) catch
+    var run_args = StringList.initCapacity(allocator, array_len) catch
         printErrExit("out of memory when making run args ArrayList", .{});
-    runArgsAddRunner(allocator, &runArgs, config.runner);
+    runArgsAddRunner(allocator, &run_args, config.runner);
 
     // add exe
-    if (config.runner != .bun or std.mem.startsWith(u8, config.outputPath, "./cache"))
-        runArgs.append(allocator, config.outputPath) catch
+    if (config.runner != .bun or std.mem.startsWith(u8, config.output_path, "./cache"))
+        run_args.append(allocator, config.output_path) catch
             printErrExit("out of memory when allocating run arg", .{})
     else
-        runArgs.append(allocator, config.inputPath) catch
+        run_args.append(allocator, config.input_path) catch
             printErrExit("out of memory when allocating run arg", .{});
 
-    config.runArgs = runArgs;
+    config.run_args = run_args;
 
     return true;
 }
@@ -222,19 +222,19 @@ fn handleInfoFlag(config: *Config, arg: []const u8) bool {
     return true;
 }
 
-fn runArgsAddRunner(allocator: std.mem.Allocator, runArgs: *StringList, runner: Runner) void {
+fn runArgsAddRunner(allocator: std.mem.Allocator, run_args: *StringList, runner: Runner) void {
     switch (runner) {
-        .wine => runArgs.append(allocator, "wine") catch
+        .wine => run_args.append(allocator, "wine") catch
             printErrExit("out of memory when allocating run arg", .{}),
-        .bun => runArgs.append(allocator, "bun") catch
+        .bun => run_args.append(allocator, "bun") catch
             printErrExit("out of memory when allocating run arg", .{}),
         .native, .none => {},
     }
 }
 
 fn handleExeArgs(allocator: std.mem.Allocator, config: *Config, arg: []const u8) bool {
-    if (config.runArgs) |*runArgs| {
-        runArgs.append(allocator, arg) catch
+    if (config.run_args) |*run_args| {
+        run_args.append(allocator, arg) catch
             printErrExit("out of memory when allocating run arg", .{});
         return true;
     }
@@ -264,7 +264,7 @@ fn handleHelpFlag(arg: []const u8) void {
     }
 }
 
-const usageStr =
+const usage_str =
     \\usage (rune {s}): rune [input_path] [output_path | flag] [flags]
     \\flags:
     \\  --debug | --safe | --fast | --size              Set optimization level (default: --debug, when output_path provided: --fast)
@@ -296,7 +296,7 @@ const usageStr =
 ;
 
 fn printUsage() void {
-    std.debug.print(usageStr, .{comptime consts.runeVersion});
+    std.debug.print(usage_str, .{comptime consts.rune_version});
 }
 
 fn getExtention(path: []const u8) Extention {

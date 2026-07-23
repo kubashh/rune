@@ -1,7 +1,7 @@
 const std = @import("std");
 const consts = @import("./lib/consts.zig");
 const cli = @import("./cli/cli.zig");
-const compileProgram = @import("./compileProgram.zig");
+const compileProgram = @import("./build/compileProgram.zig");
 const runProgram = @import("./runProgram.zig");
 
 const Config = consts.Config;
@@ -12,9 +12,9 @@ pub fn main(init: std.process.Init) void {
 
     compileProgram.compileProgram(init.io, &config);
 
-    if (config.runArgs) |*runArgs| {
-        if (config.info) runProgram.printRunInfo(runArgs.items);
-        runProgram.runProgram(init.io, runArgs.items);
-        runArgs.deinit(allocator);
+    if (config.run_args) |*run_args| {
+        if (config.info) runProgram.printRunInfo(run_args.items);
+        runProgram.runProgram(init.io, run_args.items);
+        run_args.deinit(allocator);
     }
 }
