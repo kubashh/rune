@@ -1,7 +1,7 @@
 const std = @import("std");
 const consts = @import("../lib/consts.zig");
 const util = @import("../lib/util.zig");
-const build_html_text = @embedFile("./buildHtml.js");
+const build_html_js_minified = @import("./buildHtmlJsMinified.zig").build_html_js_minified;
 
 const StringList = consts.StringList;
 const Optimization = consts.Optimization;
@@ -131,7 +131,7 @@ fn createBuildCommand(alloc: std.mem.Allocator, build_args: *StringList, config:
             if (config.extention == .html) {
                 try build_args.append(alloc, "bun");
                 try build_args.append(alloc, "-e");
-                try build_args.append(alloc, build_html_text);
+                try build_args.append(alloc, build_html_js_minified);
                 try build_args.append(alloc, config.input_path);
                 try build_args.append(alloc, config.output_path);
                 if (config.opt == .size or config.opt == .fast)

@@ -167,3 +167,4 @@ rune example/cli/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
 - add config.raw_compiler_args to build command
 - add --types flag for .ts
 - fix windows-aarch64 wine error
+- minify js better
