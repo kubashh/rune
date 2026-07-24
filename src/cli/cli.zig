@@ -58,7 +58,6 @@ pub fn processArgs(Args: std.process.Args, allocator: std.mem.Allocator) Config 
         .run_args = null,
         .types = false,
         .info = false,
-        .raw_compiler_args = null,
     };
 
     var args_left = Args.vector.len - 2;

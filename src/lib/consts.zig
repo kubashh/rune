@@ -50,7 +50,6 @@ pub const Config = struct {
     extention: Extention,
     types: bool, // build ts/tsx only
     info: bool,
-    raw_compiler_args: ?[]const u8,
 };
 
 // values

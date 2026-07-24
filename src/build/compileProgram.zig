@@ -1,7 +1,8 @@
 const std = @import("std");
 const consts = @import("../lib/consts.zig");
 const util = @import("../lib/util.zig");
-const build_html_js_minified = @import("./buildHtmlJsMinified.zig").build_html_js_minified;
+// this file need be build from ./buildHtml.js before building this project
+const build_html_js_minified = @embedFile("./buildHtmlMinified.js");
 
 const StringList = consts.StringList;
 const Optimization = consts.Optimization;

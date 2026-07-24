@@ -36,6 +36,20 @@ supported extentions:
   .zig, .rs (native), .c, .cpp, .html, .css, .js, .ts, .jsx (node_modules), .tsx (node_modules)
 ```
 
+## Project structure
+
+### src
+
+- ./src/build - contains all building stuffs
+- ./src/cli - parse command line for get config
+- ./src/lib - cross-project consts and utilities
+- ./src/run - run program
+
+### Other
+
+- ./.cache (git ignored) - zig and rune cache
+- ./dist (git ignored) - build output used in testing and releases for rune-web
+
 ## Build code with rune
 
 ```sh
@@ -164,7 +178,8 @@ rune example/cli/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
 - add support for zig cInclude (-lc)
 - add support for compiler custom flags
 - make sth like ArgParser as wrapper for args parsing
-- add config.raw_compiler_args to build command
 - add --types flag for .ts
 - fix windows-aarch64 wine error
 - minify js better
+- add targets: android-[min_version], ios
+- rune fmt .|.zig|.sh|... (format code)

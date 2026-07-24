@@ -1,7 +1,8 @@
 const std = @import("std");
-const consts = @import("./lib/consts.zig");
-const util = @import("./lib/util.zig");
+const consts = @import("../lib/consts.zig");
+const util = @import("../lib/util.zig");
 
+const Config = consts.Config;
 const Color = consts.Color;
 
 const printErrExit = util.printErrExit;
@@ -9,9 +10,10 @@ const printCommand = util.printCommand;
 const SpawnSyncError = util.SpawnSyncError;
 const spawnSyncInherit = util.spawnSyncInherit;
 
-pub fn runProgram(io: std.Io, run_args_items: []const []const u8) void {
-    _ = spawnSyncInherit(io, run_args_items) catch |err|
-        printRunErrExit(run_args_items, err);
+pub fn runProgram(io: std.Io, config: Config) void {
+    if (config.run_args) |*run_args|
+        _ = spawnSyncInherit(io, run_args.items) catch |err|
+            printRunErrExit(run_args.items, err);
 }
 
 pub fn printRunInfo(run_args_items: []const []const u8) void {

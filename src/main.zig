@@ -2,7 +2,7 @@ const std = @import("std");
 const consts = @import("./lib/consts.zig");
 const cli = @import("./cli/cli.zig");
 const compileProgram = @import("./build/compileProgram.zig");
-const runProgram = @import("./runProgram.zig");
+const runProgram = @import("./run/runProgram.zig");
 
 const Config = consts.Config;
 
@@ -12,9 +12,11 @@ pub fn main(init: std.process.Init) void {
 
     compileProgram.compileProgram(init.io, &config);
 
-    if (config.run_args) |*run_args| {
-        if (config.info) runProgram.printRunInfo(run_args.items);
-        runProgram.runProgram(init.io, run_args.items);
-        run_args.deinit(allocator);
+    if (config.runner != .none or config.run_args != null) {
+        // it may look strage, but it is safe
+        // TODO make run command (run_args) in runProgram.zig and name it run_command
+        if (config.info) runProgram.printRunInfo(config.run_args.?.items);
+        runProgram.runProgram(init.io, config);
+        config.run_args.?.deinit(allocator);
     }
 }
