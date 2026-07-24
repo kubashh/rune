@@ -136,9 +136,9 @@ fn createBuildCommand(alloc: std.mem.Allocator, build_args: *StringList, config:
             try build_args.append(alloc, config.output_path);
             if (config.opt == .size or config.opt == .fast)
                 try build_args.append(alloc, "--minify");
-            if (config.no_bundle)
+            if (config.html_no_bundle)
                 try build_args.append(alloc, "--no-bundle");
-            if (config.crossorigin)
+            if (config.html_crossorigin)
                 try build_args.append(alloc, "--crossorigin");
         },
         .css, .js, .jsx, .ts, .tsx => {

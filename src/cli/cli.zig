@@ -56,10 +56,10 @@ pub fn processArgs(Args: std.process.Args, allocator: std.mem.Allocator) Config 
         .target = getDefaultTarget(extention),
         .runner = getDefaultRunner(extention),
         .run_args = null,
-        .types = false,
+        .ts_types = false,
         .info = false,
-        .no_bundle = false,
-        .crossorigin = false,
+        .html_no_bundle = false,
+        .html_crossorigin = false,
     };
 
     var args_left = Args.vector.len - 2;
@@ -263,11 +263,11 @@ fn handleRawFlags(config: *Config, arg: []const u8) bool {
 
 fn handleHtmlFlags(config: *Config, arg: []const u8) bool {
     if (std.mem.startsWith(u8, arg, "--no-bundle")) {
-        config.no_bundle = true;
+        config.html_no_bundle = true;
         return true;
     }
     if (std.mem.startsWith(u8, arg, "--crossorigin")) {
-        config.crossorigin = true;
+        config.html_crossorigin = true;
         return true;
     }
     return false;

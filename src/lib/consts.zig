@@ -55,15 +55,15 @@ pub const Config = struct {
     runner: Runner,
     run_args: ?StringList,
     extention: Extention,
-    types: bool, // build ts/tsx only
     info: bool,
-    no_bundle: bool,
-    crossorigin: bool,
+    html_no_bundle: bool,
+    html_crossorigin: bool,
+    ts_types: bool, // build ts/tsx only
 };
 
 // values
 
-pub const rune_version = "0.2.0-dev";
+pub const rune_version = "0.2.0";
 
 //  OsTags
 //      1.  linux, macos, windows
