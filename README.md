@@ -38,17 +38,20 @@ supported extentions:
 
 ## Project structure
 
-### src
+#### src
 
 - ./src/build - contains all building stuffs
 - ./src/cli - parse command line for get config
 - ./src/lib - cross-project consts and utilities
 - ./src/run - run program
 
-### Other
+#### Other
 
 - ./.cache (git ignored) - zig and rune cache
 - ./dist (git ignored) - build output used in testing and releases for rune-web
+- ./buid_dev.sh - build for testing
+- ./build_release.sh - heplper to build release
+- ./build_test.sh - test all build targets and runners
 
 ## Build code with rune
 
@@ -140,30 +143,36 @@ rune example/cli/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
 
 ### Targets
 
-| Os-Arch-Abi       | Zig | Rust                      | C   | C++ | C#  | Java | Browser(Html/Css/JS/TS) | JSX//TSX          | Py  |
-| ----------------- | --- | ------------------------- | --- | --- | --- | ---- | ----------------------- | ----------------- | --- |
-| linux-x86_64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
-| linux-x86_64-musl | ✅  | ⚠️ (native, linux-x86_64) | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
-| linux-aarch64     | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
-| macos-x86_64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
-| macos-aarch64     | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
-| windows-x86_64    | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
-| browser (wasm)    | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| Os-Arch-Abi        | Zig | Rust                      | C   | C++ | C#  | Java | Browser(Html/Css/JS/TS) | JSX//TSX          | Py  |
+| ------------------ | --- | ------------------------- | --- | --- | --- | ---- | ----------------------- | ----------------- | --- |
+| linux-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| linux-x86_64-musl  | ✅  | ⚠️ (native, linux-x86_64) | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| linux-aarch64      | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| linux-aarch64-musl | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| macos-aarch64      | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| macos-x86_64       | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| windows-x86_64     | ✅  | ⚠️ (native)               | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| windows-aarch64    | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
+| android-aarch64    | ✅  | ❌                        | ❌  | ❌  | ❌  | ❌   | ❌                      | ❌                | ❌  |
+| android-x86_64     | ✅  | ❌                        | ❌  | ❌  | ❌  | ❌   | ❌                      | ❌                | ❌  |
+| browser (wasm)     | ✅  | ❌                        | ✅  | ✅  | ❌  | ❌   | ✅                      | ✅ (node_modules) | ❌  |
 
 ### Code runners (Testing exe's)
 
-| target                   | linux-x86_64 | linux-x86_64-musl | macos-x86_64 | macos-aarch64 | windows-x86_64 |
-| ------------------------ | ------------ | ----------------- | ------------ | ------------- | -------------- |
-| linux-x86_64             | ✅           | ❌                | ❌           | ❌            | ❌             |
-| linux-x86_64-musl        | ❌           | ✅                | ❌           | ❌            | ❌             |
-| linux-aarch64            | ❌           | ❌                | ❌           | ❌            | ❌             |
-| linux-aarch64-musl       | ❌           | ❌                | ❌           | ❌            | ❌             |
-| macos-x86_64             | ❌           | ❌                | ✅           | ❌            | ❌             |
-| macos-aarch64            | ❌           | ❌                | ❌           | ✅            | ❌             |
-| windows-x86_64           | ✅ (wine)    | ✅ (wine)         | ✅ (wine)    | ✅ (wine)     | ✅             |
-| windows-aarch64          | ❌ (wine)    | ❌ (wine)         | ❌ (wine)    | ❌ (wine)     | ❌             |
-| browser (wasm)           | ❌           | ❌                | ❌           | ❌            | ❌             |
-| browser (Html/Css/JS/TS) | ✅           | ✅                | ✅           | ✅            | ✅             |
+| target                   | linux-x86_64 | linux-x86_64-musl | macos-aarch64 | macos-x86_64 | windows-x86_64 |
+| ------------------------ | ------------ | ----------------- | ------------- | ------------ | -------------- |
+| linux-x86_64             | ✅           | ❌                | ❌            | ❌           | ❌             |
+| linux-x86_64-musl        | ❌           | ✅                | ❌            | ❌           | ❌             |
+| linux-aarch64            | ❌           | ❌                | ❌            | ❌           | ❌             |
+| linux-aarch64-musl       | ❌           | ❌                | ❌            | ❌           | ❌             |
+| macos-aarch64            | ❌           | ❌                | ✅            | ❌           | ❌             |
+| macos-x86_64             | ❌           | ❌                | ❌            | ✅           | ❌             |
+| windows-x86_64           | ✅ (wine)    | ✅ (wine)         | ✅ (wine)     | ✅ (wine)    | ✅ (wine)      |
+| windows-aarch64          | ❌ (wine)    | ❌ (wine)         | ❌ (wine)     | ❌ (wine)    | ❌ (wine)      |
+| android-aarch64          | ❌           | ❌                | ❌            | ❌           | ❌             |
+| android-x86_64           | ❌           | ❌                | ❌            | ❌           | ❌             |
+| browser (wasm)           | ❌           | ❌                | ❌            | ❌           | ❌             |
+| browser (Html/Css/JS/TS) | ✅           | ✅                | ✅            | ✅           | ✅             |
 
 ## TODO
 
@@ -175,11 +184,9 @@ rune example/cli/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
   - Build mode
 - build target windows: create .pdb file only when opt == .debug
 - add support for development on android
-- add support for zig cInclude (-lc)
+- add support for zig cInclude (-lc) and --raw flag
 - add support for compiler custom flags
 - make sth like ArgParser as wrapper for args parsing
 - add --types flag for .ts
-- fix windows-aarch64 wine error
-- minify js better
 - add targets: android-[min_version], ios
 - rune fmt .|.zig|.sh|... (format code)

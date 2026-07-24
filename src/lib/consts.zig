@@ -1,3 +1,4 @@
+// Types and values used across the project
 const std = @import("std");
 const builtin = @import("builtin");
 
@@ -6,6 +7,7 @@ const builtin = @import("builtin");
 pub const StringList = std.ArrayList([]const u8);
 
 pub const Target = enum {
+    // 1. Desktops & browser
     @"linux-x86_64",
     @"linux-x86_64-musl",
     @"linux-aarch64",
@@ -15,7 +17,12 @@ pub const Target = enum {
     @"windows-x86_64",
     @"windows-aarch64",
     browser, // wasm / html / css / js / ts
-    // and runtime?
+
+    // 2. Mobile (it is so proglematic)
+    // @"ios-aarch64", // IOS exe
+    // @"ios-aarch64-simulator", // IOS simulator
+    @"android-aarch64", // Android exe
+    @"android-x86_64", // Android emulators
 };
 pub const Optimization = enum {
     debug,
@@ -50,6 +57,7 @@ pub const Config = struct {
     extention: Extention,
     types: bool, // build ts/tsx only
     info: bool,
+    no_bundle: bool,
 };
 
 // values

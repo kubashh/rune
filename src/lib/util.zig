@@ -1,3 +1,4 @@
+// utilities for whole project
 const std = @import("std");
 const builtin = @import("builtin");
 const consts = @import("./consts.zig");
@@ -87,7 +88,6 @@ pub fn spawnSyncInherit(io: std.Io, argv: []const []const u8) SpawnSyncError!u8 
 //     }) catch {
 //         return false;
 //     };
-
 //     return exitCode == 0;
 // }
 

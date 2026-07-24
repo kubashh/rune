@@ -156,6 +156,10 @@ fn createBuildCommand(alloc: std.mem.Allocator, build_args: *StringList, config:
                     .@"windows-x86_64" => "--target=bun-windows-x64",
                     .@"windows-aarch64" => "--target=bun-windows-arm64",
                     .browser => "--target=browser",
+                    else => printErrExit(
+                        "can't build {} files for {}",
+                        .{ config.extention, config.target },
+                    ),
                 });
                 if (config.opt == .size or config.opt == .fast)
                     try build_args.append(alloc, "--minify");
@@ -190,6 +194,8 @@ fn getTargetZig(target: Target) []const u8 {
         .@"macos-aarch64" => "aarch64-macos",
         .@"windows-x86_64" => "x86_64-windows",
         .@"windows-aarch64" => "aarch64-windows",
+        .@"android-aarch64" => "aarch64-linux-android",
+        .@"android-x86_64" => "x86_64-linux-android",
         .browser => "wasm32-freestanding",
     };
 }
@@ -241,6 +247,7 @@ fn getTargetRs(target: Target) []const u8 {
         .@"windows-x86_64" => "x86_64-pc-windows-msvc",
         .@"windows-aarch64" => "aarch64-pc-windows-msvc",
         .browser => "wasm32-wasip1",
+        else => printErrExit("target: {} non supported for .rs files\n", .{target}),
     };
 }
 

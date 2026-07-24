@@ -58,6 +58,7 @@ pub fn processArgs(Args: std.process.Args, allocator: std.mem.Allocator) Config 
         .run_args = null,
         .types = false,
         .info = false,
+        .no_bundle = false,
     };
 
     var args_left = Args.vector.len - 2;
@@ -113,6 +114,7 @@ fn handleArg(allocator: std.mem.Allocator, config: *Config, arg: []const u8, arg
     if (handleExeArgs(allocator, config, arg)) return;
     if (handleInfoFlag(config, arg)) return;
     if (handleRawFlags(config, arg)) return;
+    if (handleNoBundle(config, arg)) return;
     handleHelpFlag(arg);
     // TODO add/install targets/deps
 
@@ -155,6 +157,8 @@ fn getTarget(target: []const u8) ?Target {
     if (std.mem.eql(u8, target, "macos-aarch64")) return .@"macos-aarch64";
     if (std.mem.eql(u8, target, "windows-x86_64")) return .@"windows-x86_64";
     if (std.mem.eql(u8, target, "windows-aarch64")) return .@"windows-aarch64";
+    if (std.mem.eql(u8, target, "android-aarch64")) return .@"android-aarch64";
+    if (std.mem.eql(u8, target, "android-x86_64")) return .@"android-x86_64";
     if (std.mem.eql(u8, target, "browser")) return .browser;
     return null;
 }
@@ -256,6 +260,12 @@ fn handleRawFlags(config: *Config, arg: []const u8) bool {
     return true;
 }
 
+fn handleNoBundle(config: *Config, arg: []const u8) bool {
+    if (!std.mem.startsWith(u8, arg, "--no-bundle")) return false;
+    config.no_bundle = true;
+    return true;
+}
+
 fn handleHelpFlag(arg: []const u8) void {
     if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
         printUsage();
@@ -275,6 +285,7 @@ const usage_str =
     \\    windows-x86_64, windows-aarch64                                       Windows
     \\    browser                                           Wasm | HTML | CSS | JS | TS
     \\
+    \\  --no-bundle             Only for html input, do not bundle favicon/css/js into html output
     \\  --run                   Run compiled program. evry arg passed after --run will be pass into running exe
     \\  --info                  Print build/run info (useful for debugging)
     \\  -h, --help              Show this help message
