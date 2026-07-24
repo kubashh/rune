@@ -22,6 +22,10 @@ supported targets:
   --info                  Print build/run info (useful for debugging)
   -h, --help              Show this help message
 
+html only:
+  --no-bundle             Only for html input, do not bundle favicon/css/js into html output
+  --crossorgin            Add crossorgin attribute to script and link tags in html output (useful for cdn)
+
 example usage:
   rune src/main.zig --run="my arg"
   rune src/main.rs
@@ -176,7 +180,7 @@ rune example/cli/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
 
 ## TODO
 
-- add support for: Rust (full), C#, Java, Wasm, Python
+- add support for: Rust (full), C#, Java, Python
 - rune.json
   - Parse config
   - Run scripts
@@ -184,8 +188,8 @@ rune example/cli/main.ts dist/ts/app-windows-aarch64    --target=windows-aarch64
   - Build mode
 - build target windows: create .pdb file only when opt == .debug
 - add support for development on android
-- add support for zig cInclude (-lc) and --raw flag
-- add support for compiler custom flags
+- add support for zig cInclude (-lc)
+- add support for compiler custom flags via --raw flag
 - make sth like ArgParser as wrapper for args parsing
 - add --types flag for .ts
 - add targets: android-[min_version], ios

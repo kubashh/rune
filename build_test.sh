@@ -20,6 +20,8 @@ sh ./build_dev.sh
 ./dist/test/rune example/cli/main.zig dist/zig/app-macos-x86_64       --target=macos-x86_64
 ./dist/test/rune example/cli/main.zig dist/zig/app-windows-x86_64     --target=windows-x86_64
 ./dist/test/rune example/cli/main.zig dist/zig/app-windows-aarch64    --target=windows-aarch64
+./dist/test/rune example/cli/main.zig dist/zig/app-android-aarch64    --target=android-aarch64
+./dist/test/rune example/cli/main.zig dist/zig/app-android-x86_64     --target=android-x86_64
 ./dist/test/rune example/browser/wasm.zig dist/zig/app-browser.wasm   --target=browser
 
 # build Rust
@@ -31,6 +33,8 @@ sh ./build_dev.sh
 # ./dist/test/rune example/cli/main.rs dist/rs/app-macos-x86_64       --target=macos-x86_64
 # ./dist/test/rune example/cli/main.rs dist/rs/app-windows-x86_64     --target=windows-x86_64
 # ./dist/test/rune example/cli/main.rs dist/rs/app-windows-aarch64    --target=windows-aarch64
+# ./dist/test/rune example/cli/main.rs dist/rs/app-android-aarch64    --target=android-aarch64
+# ./dist/test/rune example/cli/main.rs dist/rs/app-android-x86_64     --target=android-x86_64
 # ./dist/test/rune example/browser/wasm.rs dist/rs/app-browser.wasm   --target=browser
 
 # build C
@@ -42,6 +46,8 @@ sh ./build_dev.sh
 ./dist/test/rune example/cli/main.c dist/c/app-macos-x86_64       --target=macos-x86_64
 ./dist/test/rune example/cli/main.c dist/c/app-windows-x86_64     --target=windows-x86_64
 ./dist/test/rune example/cli/main.c dist/c/app-windows-aarch64    --target=windows-aarch64
+# ./dist/test/rune example/cli/main.c dist/c/app-android-aarch64    --target=android-aarch64
+# ./dist/test/rune example/cli/main.c dist/c/app-android-x86_64     --target=android-x86_64
 ./dist/test/rune example/browser/wasm.c dist/c/app-browser.wasm   --target=browser
 
 # build C++
@@ -53,6 +59,8 @@ sh ./build_dev.sh
 ./dist/test/rune example/cli/main.cpp dist/cpp/app-macos-x86_64       --target=macos-x86_64
 ./dist/test/rune example/cli/main.cpp dist/cpp/app-windows-x86_64     --target=windows-x86_64
 ./dist/test/rune example/cli/main.cpp dist/cpp/app-windows-aarch64    --target=windows-aarch64
+# ./dist/test/rune example/cli/main.cpp dist/cpp/app-android-aarch64    --target=android-aarch64
+# ./dist/test/rune example/cli/main.cpp dist/cpp/app-android-x86_64     --target=android-x86_64
 ./dist/test/rune example/browser/wasm.cpp dist/cpp/app-browser.wasm   --target=browser
 
 # build HTML/CSS/JS

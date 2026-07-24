@@ -125,47 +125,53 @@ fn createBuildCommand(alloc: std.mem.Allocator, build_args: *StringList, config:
             \\see supported file extentions running 'rune -h'
             \\
         , .{}),
-        .html, .css, .js, .jsx, .ts, .tsx => {
+        .html => {
             // if run args exists we don't need to compile program
             if (config.run_args != null) return;
 
-            if (config.extention == .html) {
-                try build_args.append(alloc, "bun");
-                try build_args.append(alloc, "-e");
-                try build_args.append(alloc, build_html_js_minified);
-                try build_args.append(alloc, config.input_path);
-                try build_args.append(alloc, config.output_path);
-                if (config.opt == .size or config.opt == .fast)
-                    try build_args.append(alloc, "--minify");
-            } else {
-                const outjs = std.mem.endsWith(u8, config.output_path, ".js") or std.mem.endsWith(u8, config.output_path, ".ts");
-                try build_args.append(alloc, "bun");
-                try build_args.append(alloc, "build");
-                try build_args.append(alloc, config.input_path);
-                try build_args.append(alloc, "--outfile");
-                try build_args.append(alloc, config.output_path);
-                if (outjs) {
-                    try build_args.append(alloc, "--target=node");
-                } else try build_args.append(alloc, switch (config.target) {
-                    .@"linux-x86_64" => "--target=bun-linux-x64",
-                    .@"linux-x86_64-musl" => "--target=bun-linux-x64-musl",
-                    .@"linux-aarch64" => "--target=bun-linux-arm64",
-                    .@"linux-aarch64-musl" => "--target=bun-linux-arm64-musl",
-                    .@"macos-aarch64" => "--target=bun-darwin-arm64",
-                    .@"macos-x86_64" => "--target=bun-darwin-x64",
-                    .@"windows-x86_64" => "--target=bun-windows-x64",
-                    .@"windows-aarch64" => "--target=bun-windows-arm64",
-                    .browser => "--target=browser",
-                    else => printErrExit(
-                        "can't build {} files for {}",
-                        .{ config.extention, config.target },
-                    ),
-                });
-                if (config.opt == .size or config.opt == .fast)
-                    try build_args.append(alloc, "--minify");
-                if (config.extention != .css and !outjs)
-                    try build_args.append(alloc, "--compile");
-            }
+            try build_args.append(alloc, "bun");
+            try build_args.append(alloc, "-e");
+            try build_args.append(alloc, build_html_js_minified);
+            try build_args.append(alloc, config.input_path);
+            try build_args.append(alloc, config.output_path);
+            if (config.opt == .size or config.opt == .fast)
+                try build_args.append(alloc, "--minify");
+            if (config.no_bundle)
+                try build_args.append(alloc, "--no-bundle");
+            if (config.crossorigin)
+                try build_args.append(alloc, "--crossorigin");
+        },
+        .css, .js, .jsx, .ts, .tsx => {
+            // if run args exists we don't need to compile program
+            if (config.run_args != null) return;
+
+            const outjs = std.mem.endsWith(u8, config.output_path, ".js") or std.mem.endsWith(u8, config.output_path, ".ts");
+            try build_args.append(alloc, "bun");
+            try build_args.append(alloc, "build");
+            try build_args.append(alloc, config.input_path);
+            try build_args.append(alloc, "--outfile");
+            try build_args.append(alloc, config.output_path);
+            if (outjs) {
+                try build_args.append(alloc, "--target=node");
+            } else try build_args.append(alloc, switch (config.target) {
+                .@"linux-x86_64" => "--target=bun-linux-x64",
+                .@"linux-x86_64-musl" => "--target=bun-linux-x64-musl",
+                .@"linux-aarch64" => "--target=bun-linux-arm64",
+                .@"linux-aarch64-musl" => "--target=bun-linux-arm64-musl",
+                .@"macos-aarch64" => "--target=bun-darwin-arm64",
+                .@"macos-x86_64" => "--target=bun-darwin-x64",
+                .@"windows-x86_64" => "--target=bun-windows-x64",
+                .@"windows-aarch64" => "--target=bun-windows-arm64",
+                .browser => "--target=browser",
+                else => printErrExit(
+                    "can't build {} files for {}",
+                    .{ config.extention, config.target },
+                ),
+            });
+            if (config.opt == .size or config.opt == .fast)
+                try build_args.append(alloc, "--minify");
+            if (config.extention != .css and !outjs)
+                try build_args.append(alloc, "--compile");
         },
         .py => printErrExit(
             \\python not supported yet (in development)!
@@ -214,8 +220,7 @@ fn addOptimizeRs(alloc: std.mem.Allocator, build_args: *StringList, opt: Optimiz
     });
     try build_args.append(alloc, "-C");
     try build_args.append(alloc, switch (opt) {
-        .debug,
-        => "debug-assertions=yes",
+        .debug => "debug-assertions=yes",
         .safe, .fast, .size => "debug-assertions=no",
     });
     if (opt == .debug) {

@@ -58,6 +58,7 @@ pub const Config = struct {
     types: bool, // build ts/tsx only
     info: bool,
     no_bundle: bool,
+    crossorigin: bool,
 };
 
 // values

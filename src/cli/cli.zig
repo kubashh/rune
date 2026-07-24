@@ -59,6 +59,7 @@ pub fn processArgs(Args: std.process.Args, allocator: std.mem.Allocator) Config 
         .types = false,
         .info = false,
         .no_bundle = false,
+        .crossorigin = false,
     };
 
     var args_left = Args.vector.len - 2;
@@ -114,7 +115,7 @@ fn handleArg(allocator: std.mem.Allocator, config: *Config, arg: []const u8, arg
     if (handleExeArgs(allocator, config, arg)) return;
     if (handleInfoFlag(config, arg)) return;
     if (handleRawFlags(config, arg)) return;
-    if (handleNoBundle(config, arg)) return;
+    if (handleHtmlFlags(config, arg)) return;
     handleHelpFlag(arg);
     // TODO add/install targets/deps
 
@@ -260,10 +261,16 @@ fn handleRawFlags(config: *Config, arg: []const u8) bool {
     return true;
 }
 
-fn handleNoBundle(config: *Config, arg: []const u8) bool {
-    if (!std.mem.startsWith(u8, arg, "--no-bundle")) return false;
-    config.no_bundle = true;
-    return true;
+fn handleHtmlFlags(config: *Config, arg: []const u8) bool {
+    if (std.mem.startsWith(u8, arg, "--no-bundle")) {
+        config.no_bundle = true;
+        return true;
+    }
+    if (std.mem.startsWith(u8, arg, "--crossorigin")) {
+        config.crossorigin = true;
+        return true;
+    }
+    return false;
 }
 
 fn handleHelpFlag(arg: []const u8) void {
@@ -285,10 +292,13 @@ const usage_str =
     \\    windows-x86_64, windows-aarch64                                       Windows
     \\    browser                                           Wasm | HTML | CSS | JS | TS
     \\
-    \\  --no-bundle             Only for html input, do not bundle favicon/css/js into html output
     \\  --run                   Run compiled program. evry arg passed after --run will be pass into running exe
     \\  --info                  Print build/run info (useful for debugging)
     \\  -h, --help              Show this help message
+    \\
+    \\html only:
+    \\  --no-bundle             Only for html input, do not bundle favicon/css/js into html output
+    \\  --crossorgin            Add crossorgin attribute to script and link tags in html output (useful for cdn)
     \\
     \\example usage:
     \\  rune src/main.zig --run="my arg"
