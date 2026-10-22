@@ -1,7 +1,7 @@
 VERSION="0.2.0"
 rm ./dist -rf # remove prev exe to make sure that current running is latest
 sh build_dev.sh
-bun build src/build/buildHtml.js --outfile src/build/buildHtmlMinified.js --target=node --minify # build js, later rune build
+rune src/build/buildHtml.js src/build/buildHtmlMinified.js # build js
 
 rune src/main.zig dist/$VERSION/rune-$VERSION-linux-x86_64       --target=linux-x86_64
 rune src/main.zig dist/$VERSION/rune-$VERSION-linux-x86_64-musl  --target=linux-x86_64-musl

@@ -63,7 +63,7 @@ pub const Config = struct {
 
 // values
 
-pub const rune_version = "0.2.0";
+pub const rune_version = "0.3.0-dev";
 
 //  OsTags
 //      1.  linux, macos, windows
